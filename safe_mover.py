@@ -139,19 +139,19 @@ if __name__ == '__main__':
     """put your source location / mount point here. This must be the top level of the content you want to move
     Always start the string with a r... e.g. r"c:\my_locattion\..") """
     
-    top_level_folder_of_files = r".\tests\source"
+    top_level_folder_of_files = os.path.join(".", "tests", "source")
     
 
     """put the location you expect the files to be copied to here - network locations are supported
     if they are in full (e.g. r"\\pawai\..") """ 
     
-    where_the_files_will_go = r".\tests\destination"
+    where_the_files_will_go = os.path.join(".", "tests", "destination")
     
 
     """the log file defaults to the folder that houses the python script
     if you want a specific location, you can add is here (or to to the command line call) """
     
-    where_the_log_file_will_go = r".\tests"
+    where_the_log_file_will_go = os.path.join(".", "tests")
     
     #################################
 

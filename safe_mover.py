@@ -61,10 +61,9 @@ class Folder_Tools(object):
     def __init__(self):
         self.delete_tests_data()
 
-        pass
-
     def delete_tests_data(self):    
         dest = os.path.join(".", "tests", "destination") 
+        
         try:
             shutil.rmtree(dest, ignore_errors=True)
         except:
@@ -125,7 +124,11 @@ def main(mount_point, destination_folder, log_file_location):
 
 
     ### logger - comment out if no logging wanted
-    log_line = "{}, {}, {}, {}, {}\n".format(f.source_f, f.destination_f, f.file_hash, f.modified_date, f.accessed_date)
+    try:
+        log_line = "{}, {}, {}, {}, {}\n".format(f.source_f, f.destination_f, f.file_hash, f.modified_date, f.accessed_date)
+    except:
+        log_line = "%s, %s, %s, %s,  %s" % (f.source_f, f.destination_f, f.file_hash, f.modified_date, f.accessed_date)
+        
     log = open(log_file_location,'a')
     log.write(log_line)
     log.close()

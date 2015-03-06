@@ -113,26 +113,26 @@ def main(mount_point, destination_folder, log_file_location):
 		shutil.copy2(f.source_f, f.destination_f)
 		f.new_file_hash = file_tools.create_md5(f.destination_f)
 	
-	if f.new_file_hash != f.file_hash:
-		print "Hash check fail: {}".format(f.source_f)
-		quit()
+		if f.new_file_hash != f.file_hash:
+			print "Hash check fail: {}".format(f.source_f)
+			quit()
 	
-	f.new_modified_date, f.new_created_date, f.new_accessed_date = file_tools.get_file_dates(f.destination_f)    
+		f.new_modified_date, f.new_created_date, f.new_accessed_date = file_tools.get_file_dates(f.destination_f)    
 	
-	if f.new_modified_date != f.modified_date:
-		print "Modified date check fail: {}".format(f.source_f)
-		quit()
+		if f.new_modified_date != f.modified_date:
+			print "Modified date check fail: {}".format(f.source_f)
+			quit()
 
 
-	### logger - comment out if no logging wanted
-	try:
-		log_line = "{}, {}, {}, {}, {}\n".format(f.source_f, f.destination_f, f.file_hash, f.modified_date, f.accessed_date)
-	except:
-		log_line = "%s, %s, %s, %s,  %s" % (f.source_f, f.destination_f, f.file_hash, f.modified_date, f.accessed_date)
+		### logger - comment out if no logging wanted
+		try:
+			log_line = "{}, {}, {}, {}, {}\n".format(f.source_f, f.destination_f, f.file_hash, f.modified_date, f.accessed_date)
+		except:
+			log_line = "%s, %s, %s, %s,  %s" % (f.source_f, f.destination_f, f.file_hash, f.modified_date, f.accessed_date)
 		
-	log = open(log_file_location,'a')
-	log.write(log_line)
-	log.close()
+		log = open(log_file_location,'a')
+		log.write(log_line)
+		log.close()
 
 
 if __name__ == '__main__':

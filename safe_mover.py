@@ -128,7 +128,7 @@ def main(mount_point, destination_folder, log_file_location):
 		try:
 			log_line = "{}, {}, {}, {}, {}\n".format(f.source_f, f.destination_f, f.file_hash, f.modified_date, f.accessed_date)
 		except:
-			log_line = "%s, %s, %s, %s,  %s" % (f.source_f, f.destination_f, f.file_hash, f.modified_date, f.accessed_date)
+			log_line = "%s, %s, %s, %s,  %s\n" % (f.source_f, f.destination_f, f.file_hash, f.modified_date, f.accessed_date)
 		
 		log = open(log_file_location,'a')
 		log.write(log_line)

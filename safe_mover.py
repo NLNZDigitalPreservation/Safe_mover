@@ -10,12 +10,17 @@ class File_Data(object):
 		"""holds all the data known about a file"""
 		self.source_f = f
 		self.destination_f = self.source_f.replace(folder.mount_point, folder.destination_folder)
+		self.source_head = folder.mount_point
+		self.destination_head = folder.destination_folder
 		self.file_hash = tools.create_md5(self.source_f)
 		self.new_file_hash = None
 		self.modified_date, self.created_date, self.accessed_date = tools.get_file_dates(self.source_f)
 		self.new_modified_date = None
 		self.new_created_date = None
 		self.new_accessed_date = None
+		self.hash_check = None
+		self.modified_date_check = None
+		self.relative_f_path_check = None
 
 class File_Tools(object):
 	"""contains the various per file processes"""
@@ -94,6 +99,7 @@ def main(mount_point, destination_folder, log_file_location):
 	
 	log_file_location = os.path.join(log_file_location, "logfile.csv")
 
+	
 	try: 
 		os.remove(log_file_location)
 	except:
@@ -105,6 +111,31 @@ def main(mount_point, destination_folder, log_file_location):
 	folder_data.list_of_files = folder_tools.list_folder_contents(folder_data.mount_point)
 	folder_tools.create_folder(folder_data.destination_folder)
 
+	### Write log header row
+
+	log = open(log_file_location,'a')
+	log_line = "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
+																	"source_head", 
+																	"source_f_path",
+																	"destination_head",
+																	"destination_f_path", 
+																	"relative_f_path_check",
+																	"source_file_hash", 
+																	"new_file_hash", 
+																	"hash_check",
+																	"source_modified_date", 
+																	"new_modified_date",
+																	"modified_date_check", 
+																	"source_accessed_date", 
+																	"new_accessed_date", 
+																	"source_created_date", 
+																	"new_created_date"
+																	)
+
+	log.write(log_line)
+	log.close()
+
+	### process each item in the list of files, logging as we go
 
 	for item in folder_data.list_of_files:
 		f = File_Data(item, folder_data, file_tools)
@@ -112,24 +143,45 @@ def main(mount_point, destination_folder, log_file_location):
 		folder_tools.create_folder(os.path.dirname(f.destination_f))
 		shutil.copy2(f.source_f, f.destination_f)
 		f.new_file_hash = file_tools.create_md5(f.destination_f)
-	
-		if f.new_file_hash != f.file_hash:
-			print "Hash check fail: {}".format(f.source_f)
-			quit()
-	
 		f.new_modified_date, f.new_created_date, f.new_accessed_date = file_tools.get_file_dates(f.destination_f)    
-	
-		if f.new_modified_date != f.modified_date:
-			print "Modified date check fail: {}".format(f.source_f)
-			quit()
 
+		### checking routines that look for delta between A and B values after move
 
-		### logger - comment out if no logging wanted
-		try:
-			log_line = "{}, {}, {}, {}, {}\n".format(f.source_f, f.destination_f, f.file_hash, f.modified_date, f.accessed_date)
-		except:
-			log_line = "%s, %s, %s, %s,  %s\n" % (f.source_f, f.destination_f, f.file_hash, f.modified_date, f.accessed_date)
+		f.hash_check = f.new_file_hash == f.file_hash
+		if f.new_file_hash != f.file_hash:
+			print "Hash check fail: {}".format(f.destination_f.replace(f.destination_head, ""))
 		
+		f.modified_date_check = f.new_modified_date == f.modified_date
+		if f.new_modified_date != f.modified_date:
+			print "Modified date check fail: {}".format(f.destination_f.replace(f.destination_head, ""))
+			
+		f.relative_f_path_check = f.source_f.replace(f.source_head, "") == f.destination_f.replace(f.destination_head, "")
+		if f.source_f.replace(f.source_head, "") != f.destination_f.replace(f.destination_head, ""):
+			print "file name cleaning occured: {}".format(f.destination_f.replace(f.destination_head, ""))
+			
+		### logger - gives up if logging fails.  
+		try:
+			log_line = "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
+																				f.source_head, 
+																				f.source_f.replace(f.source_head, ""),
+																				f.destination_head,
+																				f.destination_f.replace(f.destination_head, ""), 
+																				f.relative_f_path_check,
+																				f.file_hash, 
+																				f.new_file_hash, 
+																				f.hash_check,
+																				f.modified_date, 
+																				f.new_modified_date,
+																				f.modified_date_check, 
+																				f.accessed_date, 
+																				f.new_accessed_date, 
+																				f.created_date,
+																				f.new_created_date 
+																				)
+		except:
+			print "logging failed - giving up. Please find an adult."
+			quit()
+				
 		log = open(log_file_location,'a')
 		log.write(log_line)
 		log.close()

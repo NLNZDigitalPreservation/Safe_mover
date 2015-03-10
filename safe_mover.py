@@ -144,25 +144,25 @@ def main(mount_point, destination_folder, log_file_location):
 
 	log = open(log_file_location,'a')
 	log_line = "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
-																	"source_head", 
-																	"source_f_path",
-																	"source_f_name",
-																	"destination_head",
-																	"destination_f_path",
-																	"destination_f_name", 
-																	"relative_f_path_check",
-																	"filename_check",
-																	"source_file_hash", 
-																	"new_file_hash", 
-																	"hash_check",
-																	"source_modified_date", 
-																	"new_modified_date",
-																	"modified_date_check", 
-																	"source_accessed_date", 
-																	"new_accessed_date", 
-																	"source_created_date", 
-																	"new_created_date"
-																	)
+					"source_head", 
+					"source_f_path",
+					"source_f_name",
+					"destination_head",
+					"destination_f_path",
+					"destination_f_name", 
+					"relative_f_path_check",
+					"filename_check",
+					"source_file_hash", 
+					"new_file_hash", 
+					"hash_check",
+					"source_modified_date", 
+					"new_modified_date",
+					"modified_date_check", 
+					"source_accessed_date", 
+					"new_accessed_date", 
+					"source_created_date", 
+					"new_created_date"
+					)
 
 	log.write(log_line)
 	log.close()
@@ -196,30 +196,30 @@ def main(mount_point, destination_folder, log_file_location):
 			print "file name cleaning occured: {}".format(f.destination_f.replace(f.destination_head, ""))
 			
 		### logger - gives up if logging fails.  
-		# try:
-		log_line = "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
-																				f.source_head, 
-																				f.source_f_path,
-																				f.source_f_name,
-																				f.destination_head,
-																				f.destination_f_path,
-																				f.destination_f_name, 
-																				f.relative_f_path_check,
-																				f.fname_check,
-																				f.file_hash, 
-																				f.new_file_hash, 
-																				f.hash_check,
-																				f.modified_date, 
-																				f.new_modified_date,
-																				f.modified_date_check, 
-																				f.accessed_date, 
-																				f.new_accessed_date, 
-																				f.created_date,
-																				f.new_created_date 
-																				)
-		# except:
-		# 	print "logging failed - giving up. Please find an adult."
-		# 	quit()
+		try:
+			log_line = "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
+					f.source_head, 
+					f.source_f_path,
+					f.source_f_name,
+					f.destination_head,
+					f.destination_f_path,
+					f.destination_f_name, 
+					f.relative_f_path_check,
+					f.fname_check,
+					f.file_hash, 
+					f.new_file_hash, 
+					f.hash_check,
+					f.modified_date, 
+					f.new_modified_date,
+					f.modified_date_check, 
+					f.accessed_date, 
+					f.new_accessed_date, 
+					f.created_date,
+					f.new_created_date 
+					)
+		except:
+			print "logging failed - giving up. Please find an adult."
+			quit()
 				
 		log = open(log_file_location,'a')
 		log.write(log_line)

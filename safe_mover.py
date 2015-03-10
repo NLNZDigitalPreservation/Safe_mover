@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# coding=utf-8
+
 from __future__ import with_statement
 import os
 import hashlib
@@ -9,32 +12,58 @@ class File_Data(object):
 	def __init__(self, f, folder, tools):
 		"""holds all the data known about a file"""
 		self.source_f = f
-		self.destination_f = self.source_f.replace(folder.mount_point, folder.destination_folder)
 		self.source_head = folder.mount_point
 		self.destination_head = folder.destination_folder
-		self.file_hash = tools.create_md5(self.source_f)
+		self.destination_f = None
+		self.source_f_path = None 
+		self.source_f_name = None 
+		self.destination_f_path = None 
+		self.destination_f_name = None 
 		self.new_file_hash = None
-		self.modified_date, self.created_date, self.accessed_date = tools.get_file_dates(self.source_f)
 		self.new_modified_date = None
 		self.new_created_date = None
 		self.new_accessed_date = None
 		self.hash_check = None
 		self.modified_date_check = None
 		self.relative_f_path_check = None
+		self.fname_check = None
+		self.modified_date, self.created_date, self.accessed_date = tools.get_file_dates(self.source_f)
+		self.file_hash = tools.create_md5(self.source_f)
+		self.set_source_names()
+		self.set_destination_names()
 
-class File_Tools(object):
-	"""contains the various per file processes"""
-	def __init__(self):
-		pass
+	def set_source_names(self):
+		self.source_f_name = repr(os.path.basename(self.source_f))[1:-1]
+		self.source_f_path = self.source_f.replace(self.source_head, "").replace(self.source_f_name, "")
+		self.source_f_path = self.source_f_path[1:]
 
+	def set_destination_names(self):
+		self.temp_f = self.source_f.replace(self.source_head, self.destination_head) 
+		self.temp_f = self.fname_illegal_chars_handler(self.temp_f)
+		self.destination_f_name = self.clean_string(os.path.basename(self.temp_f ))
+		self.destination_f_path = self.temp_f.replace(self.destination_head, "").replace(self.destination_f_name, "")
+		self.destination_f_path = self.destination_f_path[1:]
+		self.destination_f = os.path.join(self.destination_head, self.clean_extra_periods(self.destination_f_path), self.destination_f_name)
 
-	def fname_sanitiser(self, filepath):
+	def fname_illegal_chars_handler(self, filepath):
 		"""replaces all illegal chars in the full file path with an underscore """ 
 		list_of_bad_chars = ["?", "<", ">", ":", "\"", "*", "|", "^"]
 		for bad_char in list_of_bad_chars:
 			filepath = filepath.replace(bad_char, "_")
 		return filepath
-		
+
+	def clean_extra_periods(self, folder):
+		"""replaces periods in folders names with an underscore """ 
+		return folder.replace(".", "_")
+
+	def clean_string(self, string):
+		return (string.decode("utf8","ignore"))
+
+
+class File_Tools(object):
+	"""contains the various per file processes"""
+	def __init__(self):
+		pass
 
 	def get_file_dates(self, filepath):
 		"""return the OS dates for a file object"""
@@ -114,12 +143,15 @@ def main(mount_point, destination_folder, log_file_location):
 	### Write log header row
 
 	log = open(log_file_location,'a')
-	log_line = "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
+	log_line = "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
 																	"source_head", 
 																	"source_f_path",
+																	"source_f_name",
 																	"destination_head",
-																	"destination_f_path", 
+																	"destination_f_path",
+																	"destination_f_name", 
 																	"relative_f_path_check",
+																	"filename_check",
 																	"source_file_hash", 
 																	"new_file_hash", 
 																	"hash_check",
@@ -139,7 +171,6 @@ def main(mount_point, destination_folder, log_file_location):
 
 	for item in folder_data.list_of_files:
 		f = File_Data(item, folder_data, file_tools)
-		f.destination_f = file_tools.fname_sanitiser(f.destination_f)
 		folder_tools.create_folder(os.path.dirname(f.destination_f))
 		shutil.copy2(f.source_f, f.destination_f)
 		f.new_file_hash = file_tools.create_md5(f.destination_f)
@@ -157,16 +188,24 @@ def main(mount_point, destination_folder, log_file_location):
 			
 		f.relative_f_path_check = f.source_f.replace(f.source_head, "") == f.destination_f.replace(f.destination_head, "")
 		if f.source_f.replace(f.source_head, "") != f.destination_f.replace(f.destination_head, ""):
+			print "file path cleaning occured: {}".format(f.destination_f.replace(f.destination_head, ""))
+
+
+		f.fname_check = f.source_f_name == f.destination_f_name
+		if 	f.source_f_name != f.destination_f_name:
 			print "file name cleaning occured: {}".format(f.destination_f.replace(f.destination_head, ""))
 			
 		### logger - gives up if logging fails.  
-		try:
-			log_line = "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
+		# try:
+		log_line = "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
 																				f.source_head, 
-																				f.source_f.replace(f.source_head, ""),
+																				f.source_f_path,
+																				f.source_f_name,
 																				f.destination_head,
-																				f.destination_f.replace(f.destination_head, ""), 
+																				f.destination_f_path,
+																				f.destination_f_name, 
 																				f.relative_f_path_check,
+																				f.fname_check,
 																				f.file_hash, 
 																				f.new_file_hash, 
 																				f.hash_check,
@@ -178,9 +217,9 @@ def main(mount_point, destination_folder, log_file_location):
 																				f.created_date,
 																				f.new_created_date 
 																				)
-		except:
-			print "logging failed - giving up. Please find an adult."
-			quit()
+		# except:
+		# 	print "logging failed - giving up. Please find an adult."
+		# 	quit()
 				
 		log = open(log_file_location,'a')
 		log.write(log_line)

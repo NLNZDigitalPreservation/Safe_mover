@@ -7,6 +7,11 @@ import hashlib
 import time
 import shutil
 import sys
+import csv
+
+
+
+
 
 class File_Data(object):
 	def __init__(self, f, folder, tools):
@@ -40,8 +45,8 @@ class File_Data(object):
 	def set_destination_names(self):
 		self.temp_f = self.source_f.replace(self.source_head, self.destination_head) 
 		self.temp_f = self.fname_illegal_chars_handler(self.temp_f)
-		self.destination_f_name = self.clean_string(os.path.basename(self.temp_f ))
-		self.destination_f_path = self.temp_f.replace(self.destination_head, "").replace(self.destination_f_name, "")
+		self.destination_f_name = self.clean_string(os.path.basename(self.temp_f))	
+		self.destination_f_path = self.temp_f.replace(self.destination_head, "").replace(os.path.basename(self.temp_f), "")
 		self.destination_f_path = self.destination_f_path[1:]
 		self.destination_f = os.path.join(self.destination_head, self.clean_extra_periods(self.destination_f_path), self.destination_f_name)
 
@@ -128,6 +133,7 @@ def main(mount_point, destination_folder, log_file_location):
 	
 	log_file_location = os.path.join(log_file_location, "logfile.csv")
 
+	writer = csv.writer(open(log_file_location, "wb"), quoting=csv.QUOTE_NONNUMERIC)
 	
 	try: 
 		os.remove(log_file_location)
@@ -141,10 +147,7 @@ def main(mount_point, destination_folder, log_file_location):
 	folder_tools.create_folder(folder_data.destination_folder)
 
 	### Write log header row
-
-	log = open(log_file_location,'a')
-	log_line = "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
-					"source_head", 
+	log_line = ["source_head", 
 					"source_f_path",
 					"source_f_name",
 					"destination_head",
@@ -161,11 +164,9 @@ def main(mount_point, destination_folder, log_file_location):
 					"source_accessed_date", 
 					"new_accessed_date", 
 					"source_created_date", 
-					"new_created_date"
-					)
-
-	log.write(log_line)
-	log.close()
+					"new_created_date"]
+	
+	writer.writerow(log_line) 
 
 	### process each item in the list of files, logging as we go
 
@@ -197,33 +198,33 @@ def main(mount_point, destination_folder, log_file_location):
 			
 		### logger - gives up if logging fails.  
 		try:
-			log_line = "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
-					f.source_head, 
-					f.source_f_path,
-					f.source_f_name,
-					f.destination_head,
-					f.destination_f_path,
-					f.destination_f_name, 
-					f.relative_f_path_check,
-					f.fname_check,
-					f.file_hash, 
-					f.new_file_hash, 
-					f.hash_check,
-					f.modified_date, 
-					f.new_modified_date,
-					f.modified_date_check, 
-					f.accessed_date, 
-					f.new_accessed_date, 
-					f.created_date,
-					f.new_created_date 
-					)
+
+			log_line = [
+						f.source_head, 
+						f.source_f_path,
+						f.source_f_name,
+						f.destination_head,
+						f.destination_f_path,
+						f.destination_f_name, 
+						f.relative_f_path_check,
+						f.fname_check,
+						f.file_hash, 
+						f.new_file_hash, 
+						f.hash_check,
+						f.modified_date, 
+						f.new_modified_date,
+						f.modified_date_check, 
+						f.accessed_date, 
+						f.new_accessed_date, 
+						f.created_date,
+						f.new_created_date 
+						]
+
 		except:
 			print "logging failed - giving up. Please find an adult."
 			quit()
-				
-		log = open(log_file_location,'a')
-		log.write(log_line)
-		log.close()
+
+		writer.writerow(log_line)
 
 
 if __name__ == '__main__':

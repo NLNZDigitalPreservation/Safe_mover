@@ -17,7 +17,10 @@ List of illegal chars:-
 
 To address issue of non ascii chars in filenames (e.g. soft hyphens from MAC OS) there is a sanitiser that replaces these items with a "". This is achieved by scrubbing the filename through a `string.decode("utf8","ignore")` step. The pre and post cleaning filename is logged, as is a boolean product of a string.compare() to help mark changed filenames for provenance note writing steps downstream. 
 
-Can be deployed from sommand line, or from the script directly. 
+# Commandline deployment
+
+
+Can be deployed from command line, or from the script directly. 
 
 There are two cmd line modes, one that expects the source and destination location as arguments:- 
  

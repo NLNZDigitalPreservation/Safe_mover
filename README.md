@@ -15,7 +15,7 @@ List of illegal chars:-
 (See https://kb.acronis.com/content/39790 or https://msdn.microsoft.com/en-us/library/aa365247.aspx#basic_naming_conventions%22%20target=%22_new%22 for more)
 
 
-To address issue of non ascii chars in filenames (e.g. soft hyphens from MAC OS) there is a sanitiser that replaces these items with a "". This is achieved by scrubbing the filename through a `string.decode("utf8","ignore")` step. The pre and post cleaninf fileanme is logged, as is  boolean of a string.compare() to help mark changed filenames for provenance note writing steps downstream. 
+To address issue of non ascii chars in filenames (e.g. soft hyphens from MAC OS) there is a sanitiser that replaces these items with a "". This is achieved by scrubbing the filename through a `string.decode("utf8","ignore")` step. The pre and post cleaning filename is logged, as is a boolean product of a string.compare() to help mark changed filenames for provenance note writing steps downstream. 
 
 Can be deployed from sommand line, or from the script directly. 
 
@@ -23,7 +23,7 @@ There are two cmd line modes, one that expects the source and destination locati
  
     cmd> python safe_mover.py "my_source_folder" "my_destination_folder"
     
-    in this mode, the log file (logfile,csv) is written to the location of the python script
+in this mode, the log file (logfile,csv) is written to the location of the python script
     
 the 2nd mode expects the source, destination and log file destination:- 
 

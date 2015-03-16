@@ -268,7 +268,7 @@ if __name__ == '__main__':
 	elif len(sys.argv) == 3:
 		try:
 			mount_point = sys.argv[1]
-			estination_folder = sys.argv[2]
+			destination_folder = sys.argv[2]
 		except:
 			mount_point = top_level_folder_of_files 
 			destination_folder = where_the_files_will_go

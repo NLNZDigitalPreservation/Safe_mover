@@ -10,9 +10,6 @@ import sys
 import csv
 
 
-
-
-
 class File_Data(object):
 	def __init__(self, f, folder, tools):
 		"""holds all the data known about a file"""
@@ -43,12 +40,13 @@ class File_Data(object):
 		self.source_f_path = self.source_f_path[1:]
 
 	def set_destination_names(self):
-		self.temp_f = self.source_f.replace(self.source_head, self.destination_head) 
-		self.temp_f = self.fname_illegal_chars_handler(self.temp_f)
+		self.temp_f = self.fname_illegal_chars_handler(self.source_f)
+		self.temp_f = self.source_f.replace(self.source_head, self.destination_head)
 		self.destination_f_name = self.clean_string(os.path.basename(self.temp_f))	
 		self.destination_f_path = self.temp_f.replace(self.destination_head, "").replace(os.path.basename(self.temp_f), "")
-		self.destination_f_path = self.destination_f_path[1:]
+		self.destination_f_path = self.destination_f_path[1:]		
 		self.destination_f = os.path.join(self.destination_head, self.clean_extra_periods(self.destination_f_path), self.destination_f_name)
+
 
 	def fname_illegal_chars_handler(self, filepath):
 		"""replaces all illegal chars in the full file path with an underscore """ 
@@ -59,7 +57,11 @@ class File_Data(object):
 
 	def clean_extra_periods(self, folder):
 		"""replaces periods in folders names with an underscore """ 
-		return folder.replace(".", "_")
+		
+		folder = folder.replace(".", "_")
+		if folder.startswith("_"):
+			folder = folder.replace("_",".", 1)
+		return folder
 
 	def clean_string(self, string):
 		return (string.decode("utf8","ignore"))
@@ -94,6 +96,7 @@ class Folder_Data(object):
 		self.list_of_files = []
 		self.mount_point = mount_point
 		self.destination_folder = destination_folder
+
 		
 
 class Folder_Tools(object):
@@ -131,9 +134,9 @@ class Folder_Tools(object):
 
 def main(mount_point, destination_folder, log_file_location):
 	
-	log_file_location = os.path.join(log_file_location, "logfile.csv")
+	log_file_location = os.path.join(log_file_location, "logfile_2.csv")
 
-	writer = csv.writer(open(log_file_location, "wb"), quoting=csv.QUOTE_NONNUMERIC)
+	
 	
 	try: 
 		os.remove(log_file_location)
@@ -144,6 +147,7 @@ def main(mount_point, destination_folder, log_file_location):
 	folder_tools = Folder_Tools()
 	folder_data = Folder_Data(mount_point, destination_folder, folder_tools)
 	folder_data.list_of_files = folder_tools.list_folder_contents(folder_data.mount_point)
+
 	folder_tools.create_folder(folder_data.destination_folder)
 
 	### Write log header row
@@ -166,6 +170,7 @@ def main(mount_point, destination_folder, log_file_location):
 					"source_created_date", 
 					"new_created_date"]
 	
+	writer = csv.writer(open(log_file_location, "wb"), quoting=csv.QUOTE_NONNUMERIC)
 	writer.writerow(log_line) 
 
 	### process each item in the list of files, logging as we go
@@ -236,18 +241,16 @@ if __name__ == '__main__':
 	Always start the string with a r... e.g. r"c:\my_locattion\..") """
 	
 	top_level_folder_of_files = os.path.join(".", "tests", "source")
-	
 
 	"""put the location you expect the files to be copied to here - network locations are supported
 	if they are in full (e.g. r"\\pawai\..") """ 
 	
 	where_the_files_will_go = os.path.join(".", "tests", "destination")
-	
 
 	"""the log file defaults to the folder that houses the python script
 	if you want a specific location, you can add is here (or to to the command line call) """
 	
-	where_the_log_file_will_go = os.path.join(".", "tests")
+	where_the_log_file_will_go = where_the_files_will_go
 	
 	#################################
 

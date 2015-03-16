@@ -1,4 +1,5 @@
-# Safe_mover
+# Safe_mover.py
+
 Python script to move files from A to B.
 Creating file hash and grabbing file OS metadata along the way
 Results in a log file for later consumption
@@ -13,7 +14,6 @@ List of illegal chars:-
 ? < > : * | " ^
 
 (See https://kb.acronis.com/content/39790 or https://msdn.microsoft.com/en-us/library/aa365247.aspx#basic_naming_conventions%22%20target=%22_new%22 for more)
-
 
 To address issue of non ascii chars in filenames (e.g. soft hyphens from MAC OS) there is a sanitiser that replaces these items with a "". This is achieved by scrubbing the filename through a `string.decode("utf8","ignore")` step. The pre and post cleaning filename is logged, as is a boolean product of a string.compare() to help mark changed filenames for provenance note writing steps downstream. 
 
@@ -39,4 +39,14 @@ if no arguments are given, the script will expect the locations in the script bo
 The naming of the logfile is dumb. It needs to be better, to allow them to be written to one location (e.g. ".\my_log_files" - currently they are always called logfile.csv, so if the location of the logfiles is not changed between new mount points the new file data will just get appended to the existing file. This may or may not be desirable, 
 
 
+# log_compare.py
 
+This is an automated method of comparing two of the logs file generate by the script. The use case is for where 1+n moves are needed to get content from donor into safe harbour on protected storage. 
+
+It extracts the per item relative / constant details from a log file (relative destination path, destination filename,  and file hash) and checks if (1) the item is both logs, and (2) that the names and hashes are the same.. If not, it dumps a log entry to screen. 
+
+Its deployable via cmdline per above:- 
+
+   cmd> python log_comparer.py "log_file_A.csv" "log_file_B.csv"
+   
+Or the log locations can be changed in script.  

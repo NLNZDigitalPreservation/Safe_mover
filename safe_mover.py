@@ -40,8 +40,9 @@ class File_Data(object):
 		self.source_f_path = self.source_f_path[1:]
 
 	def set_destination_names(self):
-		self.temp_f = self.fname_illegal_chars_handler(self.source_f)
+
 		self.temp_f = self.source_f.replace(self.source_head, self.destination_head)
+		self.temp_f = self.fname_illegal_chars_handler(self.source_f)
 		self.destination_f_name = self.clean_string(os.path.basename(self.temp_f))	
 		self.destination_f_path = self.temp_f.replace(self.destination_head, "").replace(os.path.basename(self.temp_f), "")
 		self.destination_f_path = self.destination_f_path[1:]		
@@ -57,7 +58,6 @@ class File_Data(object):
 
 	def clean_extra_periods(self, folder):
 		"""replaces periods in folders names with an underscore """ 
-		
 		folder = folder.replace(".", "_")
 		if folder.startswith("_"):
 			folder = folder.replace("_",".", 1)
@@ -66,17 +66,25 @@ class File_Data(object):
 	def clean_string(self, string):
 		return (string.decode("utf8","ignore"))
 
+	def clean_os_metata(self):
+		pass
+
 
 class File_Tools(object):
 	"""contains the various per file processes"""
-	def __init__(self):
-		pass
+	def __init__(self, logging_to_screen = False):
+		self.logging_to_screen = logging_to_screen
 
 	def get_file_dates(self, filepath):
 		"""return the OS dates for a file object"""
 		modified = time.ctime(os.path.getmtime(filepath))
 		created = time.ctime(os.path.getctime(filepath))
-		accessed = time.ctime(os.path.getatime(filepath))
+		try:
+			accessed = time.ctime(os.path.getatime(filepath))
+		except:
+			if self.logging_to_screen:
+				print "Bad accessed date found: {}, {}".format(os.path.getatime(filepath), filepath)
+			accessed = ""
 		return (modified, created, accessed)
 
 	def create_md5(self, filepath):
@@ -135,15 +143,17 @@ class Folder_Tools(object):
 def main(mount_point, destination_folder, log_file_location):
 	
 	log_file_location = os.path.join(log_file_location, "logfile_2.csv")
-
-	
 	
 	try: 
 		os.remove(log_file_location)
 	except:
 		pass
 
-	file_tools = File_Tools()
+	
+	###set to True if you want information dumps to screen
+	file_tools = File_Tools(False)
+
+
 	folder_tools = Folder_Tools()
 	folder_data = Folder_Data(mount_point, destination_folder, folder_tools)
 	folder_data.list_of_files = folder_tools.list_folder_contents(folder_data.mount_point)
@@ -178,27 +188,35 @@ def main(mount_point, destination_folder, log_file_location):
 	for item in folder_data.list_of_files:
 		f = File_Data(item, folder_data, file_tools)
 		folder_tools.create_folder(os.path.dirname(f.destination_f))
-		shutil.copy2(f.source_f, f.destination_f)
+		
+		try:
+			shutil.copy2(f.source_f, f.destination_f)
+		except:
+			#print f.destination_f 
+			pass
+
+
+
 		f.new_file_hash = file_tools.create_md5(f.destination_f)
 		f.new_modified_date, f.new_created_date, f.new_accessed_date = file_tools.get_file_dates(f.destination_f)    
 
 		### checking routines that look for delta between A and B values after move
 
 		f.hash_check = f.new_file_hash == f.file_hash
-		if f.new_file_hash != f.file_hash:
+		if f.new_file_hash != f.file_hash and file_tools.logging_to_screen:
 			print "Hash check fail: {}".format(f.destination_f.replace(f.destination_head, ""))
 		
 		f.modified_date_check = f.new_modified_date == f.modified_date
-		if f.new_modified_date != f.modified_date:
-			print "Modified date check fail: {}".format(f.destination_f.replace(f.destination_head, ""))
+		# if f.new_modified_date != f.modified_date:
+		# 	print "Modified date check fail: {}".format(f.destination_f.replace(f.destination_head, ""))
 			
 		f.relative_f_path_check = f.source_f.replace(f.source_head, "") == f.destination_f.replace(f.destination_head, "")
-		if f.source_f.replace(f.source_head, "") != f.destination_f.replace(f.destination_head, ""):
+		if f.source_f.replace(f.source_head, "") != f.destination_f.replace(f.destination_head, "") and file_tools.logging_to_screen:
 			print "file path cleaning occured: {}".format(f.destination_f.replace(f.destination_head, ""))
 
 
 		f.fname_check = f.source_f_name == f.destination_f_name
-		if 	f.source_f_name != f.destination_f_name:
+		if 	f.source_f_name != f.destination_f_name and file_tools.logging_to_screen:
 			print "file name cleaning occured: {}".format(f.destination_f.replace(f.destination_head, ""))
 			
 		### logger - gives up if logging fails.  
@@ -241,12 +259,13 @@ if __name__ == '__main__':
 	Always start the string with a r... e.g. r"c:\my_locattion\..") """
 	
 	top_level_folder_of_files = os.path.join(".", "tests", "source")
+	
 
 	"""put the location you expect the files to be copied to here - network locations are supported
 	if they are in full (e.g. r"\\pawai\..") """ 
 	
 	where_the_files_will_go = os.path.join(".", "tests", "destination")
-
+	
 	"""the log file defaults to the folder that houses the python script
 	if you want a specific location, you can add is here (or to to the command line call) """
 	

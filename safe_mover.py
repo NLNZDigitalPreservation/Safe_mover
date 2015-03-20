@@ -9,7 +9,6 @@ import shutil
 import sys
 import csv
 
-
 class File_Data(object):
 	def __init__(self, f, folder, tools):
 		"""holds all the data known about a file"""
@@ -35,19 +34,26 @@ class File_Data(object):
 		self.set_destination_names()
 
 	def set_source_names(self):
+		"""captures all the source strings for the head, path and file items."""
 		self.source_f_name = repr(os.path.basename(self.source_f))[1:-1]
 		self.source_f_path = self.source_f.replace(self.source_head, "").replace(self.source_f_name, "")
 		self.source_f_path = self.source_f_path[1:]
 
 	def set_destination_names(self):
-
+		"""makes all the destination strings for the head, path and file items."""
 		self.temp_f = self.source_f.replace(self.source_head, self.destination_head)
-		self.temp_f = self.fname_illegal_chars_handler(self.source_f)
-		self.destination_f_name = self.clean_string(os.path.basename(self.temp_f))	
-		self.destination_f_path = self.temp_f.replace(self.destination_head, "").replace(os.path.basename(self.temp_f), "")
-		self.destination_f_path = self.destination_f_path[1:]		
-		self.destination_f = os.path.join(self.destination_head, self.clean_extra_periods(self.destination_f_path), self.destination_f_name)
+		
+		### this deals with netwrok paths (e.g. \\my_server vs mount points e.g. c:\)
+		if self.temp_f.startswith("\\"):
+			head_clipper_amount = 2
+		else:
+			head_clipper_amount = 3
 
+		self.temp_f = self.fname_illegal_chars_handler(self.temp_f)[head_clipper_amount:]
+		self.destination_f_name = self.clean_string(os.path.basename(self.temp_f))	
+		self.destination_f_path = self.temp_f.replace(self.destination_head[head_clipper_amount:], "").replace(os.path.basename(self.temp_f), "")
+		self.destination_f_path = self.destination_f_path.strip(os.sep)
+		self.destination_f = os.path.join(self.destination_head, self.clean_extra_periods(self.destination_f_path), self.destination_f_name)
 
 	def fname_illegal_chars_handler(self, filepath):
 		"""replaces all illegal chars in the full file path with an underscore """ 
@@ -64,9 +70,11 @@ class File_Data(object):
 		return folder
 
 	def clean_string(self, string):
+		"""stips all non UTF-8 chars"""
 		return (string.decode("utf8","ignore"))
 
 	def clean_os_metata(self):
+		#todo.... 
 		pass
 
 
@@ -98,6 +106,7 @@ class File_Tools(object):
 				buf = afile.read(BLOCKSIZE)
 		return (hasher.hexdigest())
 
+
 class Folder_Data(object):
 	"""holds the metadata for the folder (file list and paths) """ 
 	def __init__(self, mount_point, destination_folder, folder_tools):
@@ -106,13 +115,13 @@ class Folder_Data(object):
 		self.destination_folder = destination_folder
 
 		
-
 class Folder_Tools(object):
 	"""methods for generating new folders, file lists and other folder level tools"""
 	def __init__(self):
 		self.delete_tests_data()
 
-	def delete_tests_data(self):    
+	def delete_tests_data(self):   
+		"""this gets fired in case the basic test case has been run previously""" 
 		dest = os.path.join(".", "tests", "destination") 
 		
 		try:
@@ -140,19 +149,17 @@ class Folder_Tools(object):
 		return list_of_files
 
 
-def main(mount_point, destination_folder, log_file_location):
+def main(mount_point, destination_folder, log_file_location, on_screen_logging):
+
+	log_file_name = "logfile.csv"
 	
-	log_file_location = os.path.join(log_file_location, "logfile_2.csv")
+	log_file_location = os.path.join(log_file_location, log_file_name)
 	
-	try: 
+	if os.path.exists(os.path.join(log_file_location, log_file_name)):
 		os.remove(log_file_location)
-	except:
-		pass
 
-	
 	###set to True if you want information dumps to screen
-	file_tools = File_Tools(False)
-
+	file_tools = File_Tools(on_screen_logging)
 
 	folder_tools = Folder_Tools()
 	folder_data = Folder_Data(mount_point, destination_folder, folder_tools)
@@ -161,7 +168,8 @@ def main(mount_point, destination_folder, log_file_location):
 	folder_tools.create_folder(folder_data.destination_folder)
 
 	### Write log header row
-	log_line = ["source_head", 
+	log_line = 			[
+					"source_head", 
 					"source_f_path",
 					"source_f_name",
 					"destination_head",
@@ -178,7 +186,8 @@ def main(mount_point, destination_folder, log_file_location):
 					"source_accessed_date", 
 					"new_accessed_date", 
 					"source_created_date", 
-					"new_created_date"]
+					"new_created_date"
+					]
 	
 	writer = csv.writer(open(log_file_location, "wb"), quoting=csv.QUOTE_NONNUMERIC)
 	writer.writerow(log_line) 
@@ -192,10 +201,8 @@ def main(mount_point, destination_folder, log_file_location):
 		try:
 			shutil.copy2(f.source_f, f.destination_f)
 		except:
-			#print f.destination_f 
-			pass
-
-
+			if file_tools.on_screen_logging:	
+				print "Copy might have failed: {}".format(f.destination_f)
 
 		f.new_file_hash = file_tools.create_md5(f.destination_f)
 		f.new_modified_date, f.new_created_date, f.new_accessed_date = file_tools.get_file_dates(f.destination_f)    
@@ -206,42 +213,42 @@ def main(mount_point, destination_folder, log_file_location):
 		if f.new_file_hash != f.file_hash and file_tools.logging_to_screen:
 			print "Hash check fail: {}".format(f.destination_f.replace(f.destination_head, ""))
 		
-		f.modified_date_check = f.new_modified_date == f.modified_date
-		# if f.new_modified_date != f.modified_date:
-		# 	print "Modified date check fail: {}".format(f.destination_f.replace(f.destination_head, ""))
+		f.modified_date_check = f.new_modified_date == f.modified_date 
+		if f.new_modified_date != f.modified_date and file_tools.logging_to_screen:
+			print "Modified date check fail: {}".format(f.destination_f.replace(f.destination_head, ""))
 			
-		f.relative_f_path_check = f.source_f.replace(f.source_head, "") == f.destination_f.replace(f.destination_head, "")
-		if f.source_f.replace(f.source_head, "") != f.destination_f.replace(f.destination_head, "") and file_tools.logging_to_screen:
+		
+		f.relative_f_path_check = f.source_f.replace(f.source_head, "") == str(f.destination_f.replace(f.destination_head, ""))
+		if f.source_f.replace(f.source_head, "") != str(f.destination_f.replace(f.destination_head, "")) and file_tools.logging_to_screen:
 			print "file path cleaning occured: {}".format(f.destination_f.replace(f.destination_head, ""))
 
-
+			
 		f.fname_check = f.source_f_name == f.destination_f_name
-		if 	f.source_f_name != f.destination_f_name and file_tools.logging_to_screen:
+		if f.source_f_name != f.destination_f_name and file_tools.logging_to_screen:
 			print "file name cleaning occured: {}".format(f.destination_f.replace(f.destination_head, ""))
 			
 		### logger - gives up if logging fails.  
 		try:
-
-			log_line = [
-						f.source_head, 
-						f.source_f_path,
-						f.source_f_name,
-						f.destination_head,
-						f.destination_f_path,
-						f.destination_f_name, 
-						f.relative_f_path_check,
-						f.fname_check,
-						f.file_hash, 
-						f.new_file_hash, 
-						f.hash_check,
-						f.modified_date, 
-						f.new_modified_date,
-						f.modified_date_check, 
-						f.accessed_date, 
-						f.new_accessed_date, 
-						f.created_date,
-						f.new_created_date 
-						]
+			log_line = 	[
+					f.source_head, 
+					f.source_f_path,
+					f.source_f_name,
+					f.destination_head,
+					f.destination_f_path,
+					f.destination_f_name, 
+					f.relative_f_path_check,
+					f.fname_check,
+					f.file_hash, 
+					f.new_file_hash, 
+					f.hash_check,
+					f.modified_date, 
+					f.new_modified_date,
+					f.modified_date_check, 
+					f.accessed_date, 
+					f.new_accessed_date, 
+					f.created_date,
+					f.new_created_date 
+					]
 
 		except:
 			print "logging failed - giving up. Please find an adult."
@@ -252,27 +259,29 @@ def main(mount_point, destination_folder, log_file_location):
 
 if __name__ == '__main__':
 	
-
 	######## editable block ######### 
 
 	"""put your source location / mount point here. This must be the top level of the content you want to move
 	Always start the string with a r... e.g. r"c:\my_locattion\..") """
 	
 	top_level_folder_of_files = os.path.join(".", "tests", "source")
-	
 
 	"""put the location you expect the files to be copied to here - network locations are supported
 	if they are in full (e.g. r"\\pawai\..") """ 
 	
 	where_the_files_will_go = os.path.join(".", "tests", "destination")
-	
+
 	"""the log file defaults to the folder that houses the python script
 	if you want a specific location, you can add is here (or to to the command line call) """
 	
 	where_the_log_file_will_go = where_the_files_will_go
 	
+	"""This variable is set True if you want on screen logging of interventions, or False if not. 
+	Its worth noting that the log will hold a record of the intervention regardless"""
+	
+	on_screen_logging = False
+	
 	#################################
-
 
 	if len(sys.argv) == 4:
 		try:
@@ -291,12 +300,10 @@ if __name__ == '__main__':
 		except:
 			mount_point = top_level_folder_of_files 
 			destination_folder = where_the_files_will_go
-
 	else:
 		mount_point = top_level_folder_of_files 
 		destination_folder = where_the_files_will_go
 		log_file_location = where_the_log_file_will_go
 
-	
-	main(mount_point, destination_folder, log_file_location)
+	main(mount_point, destination_folder, log_file_location, on_screen_logging)
 

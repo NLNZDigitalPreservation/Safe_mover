@@ -42,8 +42,13 @@ class File_Data(object):
 	def set_destination_names(self):
 		"""makes all the destination strings for the head, path and file items."""
 		self.temp_f = self.source_f.replace(self.source_head, self.destination_head)
-		
-		### this deals with netwrok paths (e.g. \\my_server vs mount points e.g. c:\)
+		### this deals with network paths and relative paths 
+		### (e.g. \\my_server vs mount points e.g. c:\)
+		### and the relative case, ".\"
+		if self.temp_f.startswith(".\\"):
+			self.temp_f = self.temp_f.replace(".\\", os.getcwd())
+			self.destination_head =  os.getcwd()
+
 		if self.temp_f.startswith("\\"):
 			head_clipper_amount = 2
 		else:
@@ -51,13 +56,13 @@ class File_Data(object):
 
 		self.temp_f = self.fname_illegal_chars_handler(self.temp_f)[head_clipper_amount:]
 		self.destination_f_name = self.clean_string(os.path.basename(self.temp_f))	
-		self.destination_f_path = self.temp_f.replace(self.destination_head[head_clipper_amount:], "").replace(os.path.basename(self.temp_f), "")
+		self.destination_f_path = self.temp_f.replace(self.destination_head[head_clipper_amount:], "").replace(self.destination_f_name, "")
 		self.destination_f_path = self.destination_f_path.strip(os.sep)
 		self.destination_f = os.path.join(self.destination_head, self.clean_extra_periods(self.destination_f_path), self.destination_f_name)
 
 	def fname_illegal_chars_handler(self, filepath):
 		"""replaces all illegal chars in the full file path with an underscore """ 
-		list_of_bad_chars = ["?", "<", ">", ":", "\"", "*", "|", "^"]
+		list_of_bad_chars = ["?", "<", ">", ":", "*", "|", "^"]
 		for bad_char in list_of_bad_chars:
 			filepath = filepath.replace(bad_char, "_")
 		return filepath
@@ -149,9 +154,9 @@ class Folder_Tools(object):
 		return list_of_files
 
 
-def main(mount_point, destination_folder, log_file_location, on_screen_logging):
+def main(mount_point, destination_folder, log_file_location, on_screen_logging, log_file_name):
 
-	log_file_name = "logfile.csv"
+	log_file_name = log_file_name
 	
 	log_file_location = os.path.join(log_file_location, log_file_name)
 	
@@ -202,7 +207,7 @@ def main(mount_point, destination_folder, log_file_location, on_screen_logging):
 			shutil.copy2(f.source_f, f.destination_f)
 		except:
 			if file_tools.on_screen_logging:	
-				print "Copy might have failed: {}".format(f.destination_f)
+				print "copy2() might have failed: {}".format(f.destination_f)
 
 		f.new_file_hash = file_tools.create_md5(f.destination_f)
 		f.new_modified_date, f.new_created_date, f.new_accessed_date = file_tools.get_file_dates(f.destination_f)    
@@ -266,10 +271,13 @@ if __name__ == '__main__':
 	
 	top_level_folder_of_files = os.path.join(".", "tests", "source")
 
+	top_level_folder_of_files = r"F:\test"
+
 	"""put the location you expect the files to be copied to here - network locations are supported
 	if they are in full (e.g. r"\\pawai\..") """ 
 	
 	where_the_files_will_go = os.path.join(".", "tests", "destination")
+	where_the_files_will_go = r"c:\working\scripting_test2" 
 
 	"""the log file defaults to the folder that houses the python script
 	if you want a specific location, you can add is here (or to to the command line call) """
@@ -279,7 +287,12 @@ if __name__ == '__main__':
 	"""This variable is set True if you want on screen logging of interventions, or False if not. 
 	Its worth noting that the log will hold a record of the intervention regardless"""
 	
-	on_screen_logging = False
+	on_screen_logging = True
+
+	"""This variable lets you change the name of the log file"""
+
+	log_file_name = "logfile.csv"
+
 	
 	#################################
 
@@ -305,5 +318,5 @@ if __name__ == '__main__':
 		destination_folder = where_the_files_will_go
 		log_file_location = where_the_log_file_will_go
 
-	main(mount_point, destination_folder, log_file_location, on_screen_logging)
+	main(mount_point, destination_folder, log_file_location, on_screen_logging, log_file_name)
 

@@ -29,7 +29,7 @@ class File_Data(object):
 		self.relative_f_path_check = None
 		self.fname_check = None
 		self.modified_date, self.created_date, self.accessed_date = tools.get_file_dates(self.source_f)
-		self.file_hash = tools.create_md5(self.source_f)
+		self.file_hash = tools.create_hash(self.source_f)
 		self.set_source_names()
 		self.set_destination_names()
 
@@ -87,9 +87,17 @@ class File_Tools(object):
 			accessed = ""
 		return (modified, created, accessed)
 
-	def create_md5(self, filepath):
-		"""return the MD5 hash of a file object"""
+	def create_hash(self, filepath):
+		"""return the hash of a file object
+		Comment out the options accordingly"""
 		hasher = hashlib.md5()
+		# hasher = hashlib.sha1()
+		# hasher = hashlib.sha224()
+		# hasher = hashlib.sha256()
+		# hasher = hashlib.sha384()
+		# hasher = hashlib.sha512()
+
+
 		BLOCKSIZE = 65536
 		with open(filepath, 'rb') as afile:
 			buf = afile.read(BLOCKSIZE)
@@ -196,7 +204,7 @@ def main(mount_point, destination_folder, log_file_location, on_screen_logging, 
 			if file_tools.on_screen_logging:	
 				print "copy2() might have failed: {}".format(f.destination_f)
 
-		f.new_file_hash = file_tools.create_md5(f.destination_f)
+		f.new_file_hash = file_tools.create_hash(f.destination_f)
 		f.new_modified_date, f.new_created_date, f.new_accessed_date = file_tools.get_file_dates(f.destination_f)    
 
 		### checking routines that look for delta between A and B values after move
@@ -280,6 +288,8 @@ if __name__ == '__main__':
 
 	log_file_name = "logfile.csv"
 
+	"""To change the hash type, find the create_hash() function and comment in the type you want to use. 
+	default is MD5. Supports md5, sha1, sha224, sha256, sha384, sha512 out the box."""
 	
 	#################################
 

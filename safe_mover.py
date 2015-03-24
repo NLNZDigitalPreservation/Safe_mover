@@ -43,9 +43,19 @@ class File_Data(object):
 		"""makes all the destination strings for the head, path and file items."""
 		self.source_path, self.source_fname = os.path.split(self.source_f)
 		self.destination_f_path = self.source_path.replace(self.source_head, "").strip("\\")
-		self.destination_f_path = self.clean_string(self.destination_f_path)
+		
 		self.destination_f_name = self.fname_illegal_chars_handler(self.source_fname)
+		self.destination_f_path = self.fname_illegal_chars_handler(self.destination_f_path)
+		
+		self.destination_f_path = self.clean_string(self.destination_f_path)
+		self.destination_f_name = self.clean_string(self.destination_f_name)
+
+		self.destination_f_path = self.destination_f_path.replace(".", "_")
+		self.destination_f_name = self.destination_f_name.replace(".", "_", self.destination_f_name.count(".")-1)
+
 		self.destination_f = os.path.join(self.destination_head, self.destination_f_path, self.destination_f_name)
+
+		print self.destination_f 
 
 	def fname_illegal_chars_handler(self, filepath):
 		"""replaces all illegal chars in the full file path with an underscore """ 
@@ -54,15 +64,9 @@ class File_Data(object):
 			filepath = filepath.replace(bad_char, "_")
 		return filepath
 
-	def clean_extra_periods(self, folder):
-		"""replaces periods in folders names with an underscore """ 
-		folder = folder.replace(".", "_")
-		if folder.startswith("_"):
-			folder = folder.replace("_",".", 1)
-		return folder
 
 	def clean_string(self, string):
-		"""stips all non UTF-8 chars"""
+		"""strips all non UTF-8 chars"""
 		return (string.decode("utf8","ignore"))
 
 	def clean_os_metata(self):
@@ -158,7 +162,6 @@ def main(mount_point, destination_folder, log_file_location, on_screen_logging, 
 	if os.path.exists(os.path.join(log_file_location, log_file_name)):
 		os.remove(log_file_location)
 
-	###set to True if you want information dumps to screen
 	file_tools = File_Tools(on_screen_logging)
 
 	folder_tools = Folder_Tools()

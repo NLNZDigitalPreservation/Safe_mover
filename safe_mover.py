@@ -10,8 +10,9 @@ import sys
 import csv
 
 class File_Data(object):
-	def __init__(self, f, folder, tools):
+	def __init__(self, f, folder, tools, logging_to_screen = False):
 		"""holds all the data known about a file"""
+		self.logging_to_screen = logging_to_screen
 		self.source_f = f
 		self.source_head = folder.mount_point
 		self.destination_head = folder.destination_folder
@@ -28,7 +29,8 @@ class File_Data(object):
 		self.modified_date_check = None
 		self.relative_f_path_check = None
 		self.fname_check = None
-		self.modified_date, self.created_date, self.accessed_date = tools.get_file_dates(self.source_f)
+		self.source_modified_date, self.source_created_date, self.source_accessed_date = tools.get_file_dates(self.source_f)
+		self.source_int_modified_date, self.source_int_created_date, self.source_int_accessed_date = tools.get_file_int_dates(self.source_f)
 		self.file_hash = tools.create_hash(self.source_f)
 		self.set_source_names()
 		self.set_destination_names()
@@ -55,8 +57,6 @@ class File_Data(object):
 
 		self.destination_f = os.path.join(self.destination_head, self.destination_f_path, self.destination_f_name)
 
-		print self.destination_f 
-
 	def fname_illegal_chars_handler(self, filepath):
 		"""replaces all illegal chars in the full file path with an underscore """ 
 		list_of_bad_chars = ["?", "<", ">", ":", "*", "|", "^"]
@@ -64,14 +64,18 @@ class File_Data(object):
 			filepath = filepath.replace(bad_char, "_")
 		return filepath
 
-
 	def clean_string(self, string):
 		"""strips all non UTF-8 chars"""
 		return (string.decode("utf8","ignore"))
 
-	def clean_os_metata(self):
-		#todo.... 
-		pass
+	def clean_os_dates_metata(self):
+		"""checks if the int dates for mtime and atime are not 0, and forcibly aligns destination with source"""
+		if self.source_accessed_date != 0 and self.source_modified_date != 0:
+			try:
+				os.utime(self.destination_f, self.source_accessed_date, self.source_modified_date)
+			except:
+				if self.logging_to_screen:
+					print "Failed to set OS times: {}".format(self.destination_f) 
 
 
 class File_Tools(object):
@@ -81,26 +85,71 @@ class File_Tools(object):
 
 	def get_file_dates(self, filepath):
 		"""return the OS dates for a file object"""
-		modified = time.ctime(os.path.getmtime(filepath))
-		created = time.ctime(os.path.getctime(filepath))
+		try:
+			modified = time.ctime(os.path.getmtime(filepath))
+		except:
+			if self.logging_to_screen:
+				print "Missing modified date: {}, {}".format(os.path.getmtime(filepath), filepath)
+			modified = ""
+		
+		try:
+			created = time.ctime(os.path.getctime(filepath))
+		except:
+			if self.logging_to_screen:
+				print "Missing created date: {}, {}".format(os.path.getctime(filepath), filepath)
+			created = ""
+
 		try:
 			accessed = time.ctime(os.path.getatime(filepath))
 		except:
 			if self.logging_to_screen:
-				print "Bad accessed date found: {}, {}".format(os.path.getatime(filepath), filepath)
+				print "Missing accessed date: {}, {}".format(os.path.getatime(filepath), filepath)
 			accessed = ""
 		return (modified, created, accessed)
+
+
+	def get_file_int_dates(self, filepath):
+		try:
+			modified = os.path.getmtime(filepath)
+		except:
+			if self.logging_to_screen:
+				print "Missing modified date: {}, {}".format(os.path.getmtime(filepath), filepath)
+			modified = 0
+		
+		try:
+			created = os.path.getctime(filepath)
+		except:
+			if self.logging_to_screen:
+				print "Missing created date: {}, {}".format(os.path.getctime(filepath), filepath)
+			created = 0
+
+		try:
+			accessed = os.path.getatime(filepath)
+		except:
+			if self.logging_to_screen:
+				print "Missing accessed date: {}, {}".format(os.path.getatime(filepath), filepath)
+			accessed = 0
+
+		return (modified, created, accessed)
+
+
+
+
+
+
+
+
 
 	def create_hash(self, filepath):
 		"""return the hash of a file object
 		Comment out the options accordingly"""
+		
 		hasher = hashlib.md5()
 		# hasher = hashlib.sha1()
 		# hasher = hashlib.sha224()
 		# hasher = hashlib.sha256()
 		# hasher = hashlib.sha384()
 		# hasher = hashlib.sha512()
-
 
 		BLOCKSIZE = 65536
 		with open(filepath, 'rb') as afile:
@@ -208,6 +257,9 @@ def main(mount_point, destination_folder, log_file_location, on_screen_logging, 
 				print "copy2() might have failed: {}".format(f.destination_f)
 
 		f.new_file_hash = file_tools.create_hash(f.destination_f)
+
+		f.clean_os_dates_metata()
+
 		f.new_modified_date, f.new_created_date, f.new_accessed_date = file_tools.get_file_dates(f.destination_f)    
 
 		### checking routines that look for delta between A and B values after move
@@ -216,8 +268,8 @@ def main(mount_point, destination_folder, log_file_location, on_screen_logging, 
 		if f.new_file_hash != f.file_hash and file_tools.logging_to_screen:
 			print "Hash check fail: {}".format(f.destination_f.replace(f.destination_head, ""))
 		
-		f.modified_date_check = f.new_modified_date == f.modified_date 
-		if f.new_modified_date != f.modified_date and file_tools.logging_to_screen:
+		f.modified_date_check = f.new_modified_date == f.source_modified_date 
+		if f.new_modified_date != f.source_modified_date and file_tools.logging_to_screen:
 			print "Modified date check fail: {}".format(f.destination_f.replace(f.destination_head, ""))
 			
 		
@@ -244,12 +296,12 @@ def main(mount_point, destination_folder, log_file_location, on_screen_logging, 
 					f.file_hash, 
 					f.new_file_hash, 
 					f.hash_check,
-					f.modified_date, 
+					f.source_modified_date, 
 					f.new_modified_date,
 					f.modified_date_check, 
-					f.accessed_date, 
+					f.source_accessed_date, 
 					f.new_accessed_date, 
-					f.created_date,
+					f.source_created_date,
 					f.new_created_date 
 					]
 
@@ -271,11 +323,13 @@ if __name__ == '__main__':
 
 	top_level_folder_of_files = r"F:\test"
 
+	top_level_folder_of_files = r"D:\fathers"
+
 	"""put the location you expect the files to be copied to here - network locations are supported
 	if they are in full (e.g. r"\\pawai\..") """ 
 	
 	where_the_files_will_go = os.path.join(".", "tests", "destination")
-	where_the_files_will_go = r"c:\working\scripting_test2" 
+	where_the_files_will_go = r"c:\working\fathers_20" 
 
 	"""the log file defaults to the folder that houses the python script
 	if you want a specific location, you can add is here (or to to the command line call) """

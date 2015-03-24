@@ -41,24 +41,11 @@ class File_Data(object):
 
 	def set_destination_names(self):
 		"""makes all the destination strings for the head, path and file items."""
-		self.temp_f = self.source_f.replace(self.source_head, self.destination_head)
-		### this deals with network paths and relative paths 
-		### (e.g. \\my_server vs mount points e.g. c:\)
-		### and the relative case, ".\"
-		if self.temp_f.startswith(".\\"):
-			self.temp_f = self.temp_f.replace(".\\", os.getcwd())
-			self.destination_head =  os.getcwd()
-
-		if self.temp_f.startswith("\\"):
-			head_clipper_amount = 2
-		else:
-			head_clipper_amount = 3
-
-		self.temp_f = self.fname_illegal_chars_handler(self.temp_f)[head_clipper_amount:]
-		self.destination_f_name = self.clean_string(os.path.basename(self.temp_f))	
-		self.destination_f_path = self.temp_f.replace(self.destination_head[head_clipper_amount:], "").replace(self.destination_f_name, "")
-		self.destination_f_path = self.destination_f_path.strip(os.sep)
-		self.destination_f = os.path.join(self.destination_head, self.clean_extra_periods(self.destination_f_path), self.destination_f_name)
+		self.source_path, self.source_fname = os.path.split(self.source_f)
+		self.destination_f_path = self.source_path.replace(self.source_head, "").strip("\\")
+		self.destination_f_path = self.clean_string(self.destination_f_path)
+		self.destination_f_name = self.fname_illegal_chars_handler(self.source_fname)
+		self.destination_f = os.path.join(self.destination_head, self.destination_f_path, self.destination_f_name)
 
 	def fname_illegal_chars_handler(self, filepath):
 		"""replaces all illegal chars in the full file path with an underscore """ 

@@ -253,7 +253,7 @@ def main(mount_point, destination_folder, log_file_location, on_screen_logging, 
 		try:
 			shutil.copy2(f.source_f, f.destination_f)
 		except:
-			if file_tools.on_screen_logging:	
+			if on_screen_logging:	
 				print "copy2() might have failed: {}".format(f.destination_f)
 
 		f.new_file_hash = file_tools.create_hash(f.destination_f)

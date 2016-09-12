@@ -2,12 +2,16 @@
 # coding=utf-8
 
 from __future__ import with_statement
+from __future__ import unicode_literals
+import string
 import os
 import hashlib
 import time
 import shutil
 import sys
 import csv
+
+printable = set(string.printable)
 
 class File_Data(object):
 	def __init__(self, f, folder, tools, logging_to_screen = False):
@@ -37,9 +41,9 @@ class File_Data(object):
 
 	def set_source_names(self):
 		"""captures all the source strings for the head, path and file items."""
-		self.source_f_name = repr(os.path.basename(self.source_f))[1:-1]
-		self.source_f_path = self.source_f.replace(self.source_head, "").replace(self.source_f_name, "")
-		self.source_f_path = self.source_f_path[1:]
+		self.source_f_name = str(repr(os.path.basename(self.source_f))[1:-1])
+		self.source_f_path = str(repr(self.source_f.replace(self.source_head, "").replace(self.source_f_name, "")))
+		self.source_f_path = str(repr(self.source_f_path[1:]))
 
 	def set_destination_names(self):
 		"""makes all the destination strings for the head, path and file items."""
@@ -51,6 +55,7 @@ class File_Data(object):
 		
 		self.destination_f_path = self.clean_string(self.destination_f_path)
 		self.destination_f_name = self.clean_string(self.destination_f_name)
+
 
 		self.destination_f_path = self.destination_f_path.replace(".", "_")
 		self.destination_f_name = self.destination_f_name.replace(".", "_", self.destination_f_name.count(".")-1)
@@ -64,9 +69,10 @@ class File_Data(object):
 			filepath = filepath.replace(bad_char, "_")
 		return filepath
 
-	def clean_string(self, string):
+	def clean_string(self, my_string):
 		"""strips all non UTF-8 chars"""
-		return (string.decode("utf8","ignore"))
+		return filter(lambda x: x in printable, my_string)
+
 
 	def clean_os_dates_metata(self):
 		"""checks if the int dates for mtime and atime are not 0, and forcibly aligns destination with source"""
@@ -131,12 +137,6 @@ class File_Tools(object):
 			accessed = 0
 
 		return (modified, created, accessed)
-
-
-
-
-
-
 
 
 
@@ -325,11 +325,15 @@ if __name__ == '__main__':
 
 	top_level_folder_of_files = r"D:\fathers"
 
+	top_level_folder_of_files = r"D:\save_mover\strange folder names"
+
 	"""put the location you expect the files to be copied to here - network locations are supported
 	if they are in full (e.g. r"\\pawai\..") """ 
 	
 	where_the_files_will_go = os.path.join(".", "tests", "destination")
 	where_the_files_will_go = r"c:\working\fathers_20" 
+
+	where_the_files_will_go = r"D:\save_mover\copy of strange folder names"
 
 	"""the log file defaults to the folder that houses the python script
 	if you want a specific location, you can add is here (or to to the command line call) """
@@ -373,4 +377,3 @@ if __name__ == '__main__':
 		log_file_location = where_the_log_file_will_go
 
 	main(mount_point, destination_folder, log_file_location, on_screen_logging, log_file_name)
-

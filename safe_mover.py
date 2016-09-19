@@ -3,6 +3,7 @@
 
 from __future__ import with_statement
 from __future__ import unicode_literals
+import datetime
 import string
 import os
 import hashlib
@@ -19,7 +20,7 @@ class File_Data(object):
 		self.logging_to_screen = logging_to_screen
 		self.source_f = f
 		self.source_head = folder.mount_point
-		self.destination_head = folder.destination_folder
+		self.destination_head = self.clean_string(folder.destination_folder)
 		self.destination_f = None
 		self.source_f_path = None 
 		self.source_f_name = None 
@@ -41,9 +42,16 @@ class File_Data(object):
 
 	def set_source_names(self):
 		"""captures all the source strings for the head, path and file items."""
-		self.source_f_name = str(repr(os.path.basename(self.source_f))[1:-1])
-		self.source_f_path = str(repr(self.source_f.replace(self.source_head, "").replace(self.source_f_name, "")))
-		self.source_f_path = str(repr(self.source_f_path[1:]))
+		self.source_f_name = self.non_utf_8_string_cleaner(str(repr(os.path.basename(self.source_f))[1:-1]))
+		self.source_f_path = self.non_utf_8_string_cleaner(str(repr(self.source_f.replace(self.source_head, "").replace(self.source_f_name, ""))))
+		self.source_f_path = self.non_utf_8_string_cleaner(str(repr(self.source_f_path[1:])))
+
+	def	non_utf_8_string_cleaner(self, string):
+		if string.startswith("u'"):
+			string = string[1:]
+		if string.endswith("\\'"):
+			string = string[:-3]
+		return  string.replace("\\\\", "\\").replace("'", "")
 
 	def set_destination_names(self):
 		"""makes all the destination strings for the head, path and file items."""
@@ -162,7 +170,7 @@ class File_Tools(object):
 
 class Folder_Data(object):
 	"""holds the metadata for the folder (file list and paths) """ 
-	def __init__(self, mount_point, destination_folder, folder_tools):
+	def __init__(self, mount_point, destination_folder):
 		self.list_of_files = []
 		self.mount_point = mount_point
 		self.destination_folder = destination_folder
@@ -171,22 +179,7 @@ class Folder_Data(object):
 class Folder_Tools(object):
 	"""methods for generating new folders, file lists and other folder level tools"""
 	def __init__(self):
-		self.delete_tests_data()
-
-	def delete_tests_data(self):   
-		"""this gets fired in case the basic test case has been run previously""" 
-		dest = os.path.join(".", "tests", "destination") 
-		
-		try:
-			shutil.rmtree(dest, ignore_errors=True)
-		except:
-			pass
-
-		try:
-			os.remove(os.path.join(".", "tests", "logfile.csv"))
-		except:
-			pass
-
+		self.destination_folder = destination_folder
 
 	def create_folder(self, f):
 		""" if not exists, created given folder"""
@@ -195,10 +188,22 @@ class Folder_Tools(object):
 
 	def list_folder_contents(self, location):
 		"""returns recursed list of all file objects in location""" 
+
+		print location
+
 		list_of_files = []
 		for root, subs, files in os.walk(location):
 			for f in files:
-				list_of_files.append(os.path.join(root, f))
+				
+				relative_path = os.path.join(root, f)
+
+				if not relative_path.startswith(self.destination_folder):
+					relative_path = os.path.join( self.destination_folder, relative_path)
+
+				list_of_files.append(relative_path)
+
+				print os.path.join(root, f).encode("utf-8", "replace")
+				
 		return list_of_files
 
 
@@ -212,9 +217,10 @@ def main(mount_point, destination_folder, log_file_location, on_screen_logging, 
 		os.remove(log_file_location)
 
 	file_tools = File_Tools(on_screen_logging)
-
 	folder_tools = Folder_Tools()
-	folder_data = Folder_Data(mount_point, destination_folder, folder_tools)
+
+
+	folder_data = Folder_Data(mount_point, destination_folder)
 	folder_data.list_of_files = folder_tools.list_folder_contents(folder_data.mount_point)
 
 	folder_tools.create_folder(folder_data.destination_folder)
@@ -248,6 +254,10 @@ def main(mount_point, destination_folder, log_file_location, on_screen_logging, 
 
 	for item in folder_data.list_of_files:
 		f = File_Data(item, folder_data, file_tools)
+
+		print item.encode("utf-8", "replace")
+
+		#print f.destination_f
 		folder_tools.create_folder(os.path.dirname(f.destination_f))
 		
 		try:
@@ -319,21 +329,12 @@ if __name__ == '__main__':
 	"""put your source location / mount point here. This must be the top level of the content you want to move
 	Always start the string with a r... e.g. r"c:\my_locattion\..") """
 	
-	top_level_folder_of_files = os.path.join(".", "tests", "source")
-
-	top_level_folder_of_files = r"F:\test"
-
-	top_level_folder_of_files = r"D:\fathers"
-
 	top_level_folder_of_files = r"D:\save_mover\strange folder names"
 
 	"""put the location you expect the files to be copied to here - network locations are supported
 	if they are in full (e.g. r"\\pawai\..") """ 
-	
-	where_the_files_will_go = os.path.join(".", "tests", "destination")
-	where_the_files_will_go = r"c:\working\fathers_20" 
 
-	where_the_files_will_go = r"D:\save_mover\copy of strange folder names"
+	where_the_files_will_go = r"D:\save_mover\junk_moves"
 
 	"""the log file defaults to the folder that houses the python script
 	if you want a specific location, you can add is here (or to to the command line call) """
@@ -347,12 +348,13 @@ if __name__ == '__main__':
 
 	"""This variable lets you change the name of the log file"""
 
-	log_file_name = "logfile.csv"
+	log_file_name = str(datetime.date.today())+"_"+"logfile.csv"	
 
 	"""To change the hash type, find the create_hash() function and comment in the type you want to use. 
 	default is MD5. Supports md5, sha1, sha224, sha256, sha384, sha512 out the box."""
 	
-	#################################
+	######## Don't edit past here #########################
+
 
 	if len(sys.argv) == 4:
 		try:

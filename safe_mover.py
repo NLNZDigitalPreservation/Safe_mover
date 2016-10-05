@@ -346,9 +346,16 @@ if __name__ == '__main__':
 	
 	on_screen_logging = True
 
-	"""This variable lets you change the name of the log file"""
+	"""This variable lets you change the name of the log file
+	Its currently quite  brittle - change around things at will, 
+	as long as you give a valid path and end with .csv"""
+	
+	log_file_suffix = ""
 
-	log_file_name = str(datetime.date.today())+"_"+"logfile.csv"	
+	if log_file_suffix == "":
+		log_file_name = "{}_{}".format(str(datetime.date.today()), "logfile.csv")
+	else:
+		log_file_name = "{}_{}_{}".format(log_file_suffix, str(datetime.date.today()), "logfile.csv")	
 
 	"""To change the hash type, find the create_hash() function and comment in the type you want to use. 
 	default is MD5. Supports md5, sha1, sha224, sha256, sha384, sha512 out the box."""

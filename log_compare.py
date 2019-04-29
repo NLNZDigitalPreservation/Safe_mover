@@ -14,7 +14,7 @@ class Log(object):
 	def get_data(self, f):
 		"""pulls a csv reader from the file"""
 		data = []
-		csvfile = open(f, 'rb')
+		csvfile = open(f, 'r')
 		reader = csv.reader(csvfile)
 		return reader
 
@@ -62,11 +62,11 @@ class Checks(object):
 				if value == self.b[item]:
 					pass
 				else:
-					print "'{}' has a different hash".format(item)
+					print("'{}' has a different hash".format(item))
 			else:
-				print "'{}' is missing from '{}'".format(item, self.b_label)
+				print("'{}' is missing from '{}'".format(item, self.b_label))
 
-		print "Iteration 1 complete"
+		print("Iteration 1 complete")
 		
 		for item, value, in self.b.items():
 			item_check = self.missing_check(item, self.a)
@@ -75,10 +75,10 @@ class Checks(object):
 				if value == self.a[item]:
 					pass
 				else:
-					print "'{}' has a different hash".format(item)
+					print("'{}' has a different hash".format(item))
 			else:
-				print "'{}' is missing from '{}'".format(item, self.a_label)
-		print "Iteration 2 complete"
+				print("'{}' is missing from '{}'".format(item, self.a_label))
+		print("Iteration 2 complete")
 			
 
 
@@ -104,11 +104,11 @@ if __name__ == '__main__':
 
 	"""Log file A location"""
 	
-	log_a = r"tests\test_log_master.csv"
+	log_a = r"C:\source\Code\NDHA\SafeMover\Safe_mover\destination\no_extension\2019-04-18_logfile.csv"
 
 	"""Log file B location""" 
 	
-	log_b = r"tests\test_log_all_bad_cases.csv"
+	log_b = r"C:\source\Code\NDHA\SafeMover\Safe_mover\destination\2019-04-18_logfile.csv"
 	
 	#################################
 

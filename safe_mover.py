@@ -55,6 +55,7 @@ class File_Data(object):
 
 	def set_destination_names(self):
 		"""makes all the destination strings for the head, path and file items."""
+
 		self.source_path, self.source_fname = os.path.split(self.source_f)
 		self.destination_f_path = self.source_path.replace(self.source_head, "").strip("\\")
 		
@@ -63,7 +64,6 @@ class File_Data(object):
 		
 		self.destination_f_path = self.clean_string(self.destination_f_path)
 		self.destination_f_name = self.clean_string(self.destination_f_name)
-
 
 		self.destination_f_path = self.destination_f_path.replace(".", "_")
 		self.destination_f_name = self.destination_f_name.replace(".", "_", self.destination_f_name.count(".")-1)
@@ -79,7 +79,7 @@ class File_Data(object):
 
 	def clean_string(self, my_string):
 		"""strips all non UTF-8 chars"""
-		return filter(lambda x: x in printable, my_string)
+		return "".join(filter(lambda x: x in printable, my_string))
 
 
 	def clean_os_dates_metata(self):
@@ -89,7 +89,7 @@ class File_Data(object):
 				os.utime(self.destination_f, self.source_accessed_date, self.source_modified_date)
 			except:
 				if self.logging_to_screen:
-					print "Failed to set OS times: {}".format(self.destination_f) 
+					print("Failed to set OS times: {}".format(self.destination_f))
 
 
 class File_Tools(object):
@@ -103,21 +103,21 @@ class File_Tools(object):
 			modified = time.ctime(os.path.getmtime(filepath))
 		except:
 			if self.logging_to_screen:
-				print "Missing modified date: {}, {}".format(os.path.getmtime(filepath), filepath)
+				print("Missing modified date: {}, {}".format(os.path.getmtime(filepath), filepath))
 			modified = ""
 		
 		try:
 			created = time.ctime(os.path.getctime(filepath))
 		except:
 			if self.logging_to_screen:
-				print "Missing created date: {}, {}".format(os.path.getctime(filepath), filepath)
+				print("Missing created date: {}, {}".format(os.path.getctime(filepath), filepath))
 			created = ""
 
 		try:
 			accessed = time.ctime(os.path.getatime(filepath))
 		except:
 			if self.logging_to_screen:
-				print "Missing accessed date: {}, {}".format(os.path.getatime(filepath), filepath)
+				print("Missing accessed date: {}, {}".format(os.path.getatime(filepath), filepath))
 			accessed = ""
 		return (modified, created, accessed)
 
@@ -127,21 +127,21 @@ class File_Tools(object):
 			modified = os.path.getmtime(filepath)
 		except:
 			if self.logging_to_screen:
-				print "Missing modified date: {}, {}".format(os.path.getmtime(filepath), filepath)
+				print("Missing modified date: {}, {}".format(os.path.getmtime(filepath), filepath))
 			modified = 0
 		
 		try:
 			created = os.path.getctime(filepath)
 		except:
 			if self.logging_to_screen:
-				print "Missing created date: {}, {}".format(os.path.getctime(filepath), filepath)
+				print("Missing created date: {}, {}".format(os.path.getctime(filepath), filepath))
 			created = 0
 
 		try:
 			accessed = os.path.getatime(filepath)
 		except:
 			if self.logging_to_screen:
-				print "Missing accessed date: {}, {}".format(os.path.getatime(filepath), filepath)
+				print("Missing accessed date: {}, {}".format(os.path.getatime(filepath), filepath))
 			accessed = 0
 
 		return (modified, created, accessed)
@@ -189,7 +189,7 @@ class Folder_Tools(object):
 	def list_folder_contents(self, location):
 		"""returns recursed list of all file objects in location""" 
 
-		print location
+		print(location)
 
 		list_of_files = []
 		for root, subs, files in os.walk(location):
@@ -202,96 +202,51 @@ class Folder_Tools(object):
 
 				list_of_files.append(relative_path)
 
-				print os.path.join(root, f).encode("utf-8", "replace")
+				print(os.path.join(root, f).encode("utf-8", "replace"))
 				
 		return list_of_files
 
+class CSV_Writer(object):	
+	"""holds the writer and information for the CSV files"""
+	writer = None
 
-def main(mount_point, destination_folder, log_file_location, on_screen_logging, log_file_name):
+	def __init__(self, destination_folder):
+		self.destination_folder = destination_folder
 
-	log_file_name = log_file_name
-	
-	log_file_location = os.path.join(log_file_location, log_file_name)
-	
-	if os.path.exists(os.path.join(log_file_location, log_file_name)):
-		os.remove(log_file_location)
-
-	file_tools = File_Tools(on_screen_logging)
-	folder_tools = Folder_Tools()
+		if not os.path.exists(destination_folder):
+			self.writer = csv.writer(open(destination_folder, "a", newline=''), quoting=csv.QUOTE_NONNUMERIC)
+			self.write_header()
+		else:
+			self.writer = csv.writer(open(destination_folder, "a", newline=''), quoting=csv.QUOTE_NONNUMERIC)
 
 
-	folder_data = Folder_Data(mount_point, destination_folder)
-	folder_data.list_of_files = folder_tools.list_folder_contents(folder_data.mount_point)
-
-	folder_tools.create_folder(folder_data.destination_folder)
-
-	### Write log header row
-	log_line = 			[
-					"source_head", 
-					"source_f_path",
-					"source_f_name",
-					"destination_head",
-					"destination_f_path",
-					"destination_f_name", 
-					"relative_f_path_check",
-					"filename_check",
-					"source_file_hash", 
-					"new_file_hash", 
-					"hash_check",
-					"source_modified_date", 
-					"new_modified_date",
-					"modified_date_check", 
-					"source_accessed_date", 
-					"new_accessed_date", 
-					"source_created_date", 
-					"new_created_date"
-					]
-	
-	writer = csv.writer(open(log_file_location, "wb"), quoting=csv.QUOTE_NONNUMERIC)
-	writer.writerow(log_line) 
-
-	### process each item in the list of files, logging as we go
-
-	for item in folder_data.list_of_files:
-		f = File_Data(item, folder_data, file_tools)
-
-		print item.encode("utf-8", "replace")
-
-		#print f.destination_f
-		folder_tools.create_folder(os.path.dirname(f.destination_f))
-		
-		try:
-			shutil.copy2(f.source_f, f.destination_f)
-		except:
-			if on_screen_logging:	
-				print "copy2() might have failed: {}".format(f.destination_f)
-
-		f.new_file_hash = file_tools.create_hash(f.destination_f)
-
-		f.clean_os_dates_metata()
-
-		f.new_modified_date, f.new_created_date, f.new_accessed_date = file_tools.get_file_dates(f.destination_f)    
-
-		### checking routines that look for delta between A and B values after move
-
-		f.hash_check = f.new_file_hash == f.file_hash
-		if f.new_file_hash != f.file_hash and file_tools.logging_to_screen:
-			print "Hash check fail: {}".format(f.destination_f.replace(f.destination_head, ""))
-		
-		f.modified_date_check = f.new_modified_date == f.source_modified_date 
-		if f.new_modified_date != f.source_modified_date and file_tools.logging_to_screen:
-			print "Modified date check fail: {}".format(f.destination_f.replace(f.destination_head, ""))
+	def write_header(self):
+	"""writes the header to the CSV file"""
+		log_line = 			[
+							"source_head", 
+							"source_f_path",
+							"source_f_name",
+							"destination_head",
+							"destination_f_path",
+							"destination_f_name", 
+							"relative_f_path_check",
+							"filename_check",
+							"source_file_hash", 
+							"new_file_hash", 
+							"hash_check",
+							"source_modified_date", 
+							"new_modified_date",
+							"modified_date_check", 
+							"source_accessed_date", 
+							"new_accessed_date", 
+							"source_created_date", 
+							"new_created_date"
+							]
 			
-		
-		f.relative_f_path_check = f.source_f.replace(f.source_head, "") == str(f.destination_f.replace(f.destination_head, ""))
-		if f.source_f.replace(f.source_head, "") != str(f.destination_f.replace(f.destination_head, "")) and file_tools.logging_to_screen:
-			print "file path cleaning occured: {}".format(f.destination_f.replace(f.destination_head, ""))
+		self.writer.writerow(log_line) 
 
-			
-		f.fname_check = f.source_f_name == f.destination_f_name
-		if f.source_f_name != f.destination_f_name and file_tools.logging_to_screen:
-			print "file name cleaning occured: {}".format(f.destination_f.replace(f.destination_head, ""))
-			
+	def write_row(self, f):
+	"""writes an individual row to a csv file"""
 		### logger - gives up if logging fails.  
 		try:
 			log_line = 	[
@@ -316,10 +271,90 @@ def main(mount_point, destination_folder, log_file_location, on_screen_logging, 
 					]
 
 		except:
-			print "logging failed - giving up. Please find an adult."
+			print("logging failed - giving up. Please find an adult.")
 			quit()
 
-		writer.writerow(log_line)
+		self.writer.writerow(log_line)
+
+def main(mount_point, destination_folder, log_file_location, on_screen_logging, log_file_name):
+
+	log_file_name = log_file_name
+	
+	no_extension_log_file_location = log_file_location + '/no_extension/' + log_file_name
+	log_file_location = os.path.join(log_file_location, log_file_name)
+
+	if os.path.exists(os.path.join(log_file_location)):
+		os.remove(log_file_location)
+
+	if os.path.exists(os.path.join(no_extension_log_file_location)):
+		os.remove(no_extension_log_file_location)
+
+	file_tools = File_Tools(on_screen_logging)
+	folder_tools = Folder_Tools()
+
+	folder_data = Folder_Data(mount_point, destination_folder)
+	folder_data.list_of_files = folder_tools.list_folder_contents(folder_data.mount_point)
+
+	folder_tools.create_folder(folder_data.destination_folder)
+
+	### process each item in the list of files, logging as we go
+	for item in folder_data.list_of_files:
+		f = File_Data(item, folder_data, file_tools)
+
+		print(item.encode("utf-8", "replace"))
+
+		folder_tools.create_folder(os.path.dirname(f.destination_f))
+
+		# checks if there is no file extension 
+		if not os.path.splitext(f.source_f)[1]:
+
+			new_file_destination = folder_data.destination_folder + '/no_extension'
+
+			if not os.path.exists(f.destination_f + '/no_extension'):
+				folder_tools.create_folder(new_file_destination)
+				
+			f.destination_f = os.path.join(new_file_destination, f.source_f_name)
+
+			writer = CSV_Writer(os.path.join(new_file_destination, log_file_name))
+
+		else:
+			writer = CSV_Writer(log_file_location)
+
+		try:
+			shutil.copy2(f.source_f, f.destination_f)
+		except:
+			if on_screen_logging:	
+				print("copy2() might have failed: {}".format(f.destination_f))
+
+		f.new_file_hash = file_tools.create_hash(f.destination_f)
+
+		f.clean_os_dates_metata()
+
+		f.new_modified_date, f.new_created_date, f.new_accessed_date = file_tools.get_file_dates(f.destination_f)    
+
+		### checking routines that look for delta between A and B values after move
+
+		f.hash_check = f.new_file_hash == f.file_hash
+		if f.new_file_hash != f.file_hash and file_tools.logging_to_screen:
+			print("Hash check fail: {}".format(f.destination_f.replace(f.destination_head, "")))
+		
+
+		f.modified_date_check = f.new_modified_date == f.source_modified_date 
+		if f.new_modified_date != f.source_modified_date and file_tools.logging_to_screen:
+			print("Modified date check fail: {}".format(f.destination_f.replace(f.destination_head, "")))
+			
+		
+		f.relative_f_path_check = f.source_f.replace(f.source_head, "") == str(f.destination_f.replace(f.destination_head, ""))
+		if f.source_f.replace(f.source_head, "") != str(f.destination_f.replace(f.destination_head, "")) and file_tools.logging_to_screen:
+			print("file path cleaning occured: {}".format(f.destination_f.replace(f.destination_head, "")))
+
+			
+		f.fname_check = f.source_f_name == f.destination_f_name
+		if f.source_f_name != f.destination_f_name and file_tools.logging_to_screen:
+			print("file name cleaning occured: {}".format(f.destination_f.replace(f.destination_head, "")))
+			
+		# writes the row of file information to the CSV log file 
+		writer.write_row(f)
 
 
 if __name__ == '__main__':

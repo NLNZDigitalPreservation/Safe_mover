@@ -221,7 +221,7 @@ class CSV_Writer(object):
 
 
 	def write_header(self):
-	"""writes the header to the CSV file"""
+		"""writes the header to the CSV file"""
 		log_line = 			[
 							"source_head", 
 							"source_f_path",
@@ -246,7 +246,7 @@ class CSV_Writer(object):
 		self.writer.writerow(log_line) 
 
 	def write_row(self, f):
-	"""writes an individual row to a csv file"""
+		"""writes an individual row to a csv file"""
 		### logger - gives up if logging fails.  
 		try:
 			log_line = 	[
@@ -362,14 +362,14 @@ if __name__ == '__main__':
 	######## editable block ######### 
 
 	"""put your source location / mount point here. This must be the top level of the content you want to move
-	Always start the string with a r... e.g. r"c:\my_locattion\..") """
+	Always start the string with a r... e.g. r"c:\my_location\..") """
 	
-	top_level_folder_of_files = r"D:\save_mover\strange folder names"
+	top_level_folder_of_files = r""
 
 	"""put the location you expect the files to be copied to here - network locations are supported
 	if they are in full (e.g. r"\\pawai\..") """ 
 
-	where_the_files_will_go = r"D:\save_mover\junk_moves"
+	where_the_files_will_go = r""
 
 	"""the log file defaults to the folder that houses the python script
 	if you want a specific location, you can add is here (or to to the command line call) """

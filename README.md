@@ -17,6 +17,8 @@ List of illegal chars:-
 
 To address issue of non ascii chars in filenames (e.g. soft hyphens from MAC OS) there is a sanitiser that replaces these items with a "". This is achieved by scrubbing the filename through a `string.decode("utf8","ignore")` step. The pre and post cleaning filename is logged, as is a boolean product of a string.compare() to help mark changed filenames for provenance note writing steps downstream. 
 
+The script also identifies files that have no file extension, and moves these files into a sub-directory within the destination folder named `no_extension` with it's own individual log file.
+
 ### (Commandline) deployment
 
 

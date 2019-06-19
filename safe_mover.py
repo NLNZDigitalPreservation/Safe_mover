@@ -214,10 +214,17 @@ class CSV_Writer(object):
 		self.destination_folder = destination_folder
 
 		if not os.path.exists(destination_folder):
-			self.writer = csv.writer(open(destination_folder, "a", newline=''), quoting=csv.QUOTE_NONNUMERIC)
-			self.write_header()
+			if sys.version_info[0] < 3:
+				self.writer = csv.writer(open(destination_folder, "ab"), quoting=csv.QUOTE_NONNUMERIC)
+				self.write_header()
+			else:
+				self.writer = csv.writer(open(destination_folder, "a", newline=''), quoting=csv.QUOTE_NONNUMERIC)
+				self.write_header()
 		else:
-			self.writer = csv.writer(open(destination_folder, "a", newline=''), quoting=csv.QUOTE_NONNUMERIC)
+			if sys.version_info[0] < 3:
+				self.writer = csv.writer(open(destination_folder, "ab"), quoting=csv.QUOTE_NONNUMERIC)
+			else:
+				self.writer = csv.writer(open(destination_folder, "a", newline=''), quoting=csv.QUOTE_NONNUMERIC)
 
 
 	def write_header(self):
@@ -315,7 +322,7 @@ def main(mount_point, destination_folder, log_file_location, on_screen_logging, 
 				
 			f.destination_f = os.path.join(new_file_destination, f.source_f_name)
 
-			writer = CSV_Writer(os.path.join(new_file_destination, log_file_name))
+			writer = CSV_Writer(os.path.join(new_file_destination, os.path.splitext(log_file_name)[0] + '_no_ext.csv'))
 
 		else:
 			writer = CSV_Writer(log_file_location)
@@ -361,15 +368,20 @@ if __name__ == '__main__':
 	
 	######## editable block ######### 
 
+
 	"""put your source location / mount point here. This must be the top level of the content you want to move
 	Always start the string with a r... e.g. r"c:\my_location\..") """
 	
-	top_level_folder_of_files = r""
+	# top_level_folder_of_files = r"C:\source\Code\NDHA\SafeMover\tests\source\file_set_1"
+	top_level_folder_of_files = r"C:\source\Code\NDHA\SafeMover\source"
+
 
 	"""put the location you expect the files to be copied to here - network locations are supported
 	if they are in full (e.g. r"\\pawai\..") """ 
 
-	where_the_files_will_go = r""
+	# where_the_files_will_go = r"C:\source\Code\NDHA\SafeMover\tests\destination"
+	where_the_files_will_go = r"C:\source\Code\NDHA\SafeMover\destination"
+
 
 	"""the log file defaults to the folder that houses the python script
 	if you want a specific location, you can add is here (or to to the command line call) """

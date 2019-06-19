@@ -104,11 +104,11 @@ if __name__ == '__main__':
 
 	"""Log file A location"""
 	
-	log_a = r"C:\source\Code\NDHA\SafeMover\Safe_mover\destination\no_extension\2019-04-18_logfile.csv"
+	log_a = r"C:\source\Code\NDHA\SafeMover\destination\2019-05-13_logfile.csv"
 
 	"""Log file B location""" 
 	
-	log_b = r"C:\source\Code\NDHA\SafeMover\Safe_mover\destination\2019-04-18_logfile.csv"
+	log_b = r"C:\source\Code\NDHA\SafeMover\destination\no_extension\2019-05-13_logfile_no_ext.csv"
 	
 	#################################
 

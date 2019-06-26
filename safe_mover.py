@@ -315,14 +315,31 @@ def main(mount_point, destination_folder, log_file_location, on_screen_logging, 
 		# checks if there is no file extension 
 		if not os.path.splitext(f.source_f)[1]:
 
-			new_file_destination = folder_data.destination_folder + '/no_extension'
+			new_file_destination = folder_data.destination_folder + '\\no_extension'
 
-			if not os.path.exists(f.destination_f + '/no_extension'):
+			if not os.path.exists(f.destination_f + '\\no_extension'):
 				folder_tools.create_folder(new_file_destination)
+
+			# scrape off the string past the end of the base destination to keep nesting intact for directories
+			length_of_base = len(destination_folder)
+			length_of_destination = len(f.destination_f)
+			difference = len(f.destination_f) - len(destination_folder) 
+			difference_in_path = f.destination_f[-difference:]
+			head, tail = os.path.split(difference_in_path)
+			f.source_f_path = head
+
+			# insert the no_extension file path
+			destination = destination_folder + '\\no_extension' + difference_in_path
 				
-			f.destination_f = os.path.join(new_file_destination, f.source_f_name)
+			head, tail = os.path.split(destination)
+
+			if not os.path.exists(head):
+				folder_tools.create_folder(head)
+
+			f.destination_f = os.path.join(head, f.source_f_name)
 
 			writer = CSV_Writer(os.path.join(new_file_destination, os.path.splitext(log_file_name)[0] + '_no_ext.csv'))
+
 
 		else:
 			writer = CSV_Writer(log_file_location)
@@ -373,14 +390,14 @@ if __name__ == '__main__':
 	Always start the string with a r... e.g. r"c:\my_location\..") """
 	
 	# top_level_folder_of_files = r"C:\source\Code\NDHA\SafeMover\tests\source\file_set_1"
-	top_level_folder_of_files = r"C:\source\Code\NDHA\SafeMover\source"
+	top_level_folder_of_files = r"C:\source\Code\NDHA\SafeMover\test\source"
 
 
 	"""put the location you expect the files to be copied to here - network locations are supported
 	if they are in full (e.g. r"\\pawai\..") """ 
 
 	# where_the_files_will_go = r"C:\source\Code\NDHA\SafeMover\tests\destination"
-	where_the_files_will_go = r"C:\source\Code\NDHA\SafeMover\destination"
+	where_the_files_will_go = r"C:\source\Code\NDHA\SafeMover\test\destination"
 
 
 	"""the log file defaults to the folder that houses the python script

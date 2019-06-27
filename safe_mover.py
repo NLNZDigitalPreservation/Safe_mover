@@ -308,8 +308,6 @@ def main(mount_point, destination_folder, log_file_location, on_screen_logging, 
 	for item in folder_data.list_of_files:
 		f = File_Data(item, folder_data, file_tools)
 
-		print(item.encode("utf-8", "replace"))
-
 		folder_tools.create_folder(os.path.dirname(f.destination_f))
 
 		# checks if there is no file extension 
@@ -339,7 +337,6 @@ def main(mount_point, destination_folder, log_file_location, on_screen_logging, 
 			f.destination_f = os.path.join(head, f.source_f_name)
 
 			writer = CSV_Writer(os.path.join(new_file_destination, os.path.splitext(log_file_name)[0] + '_no_ext.csv'))
-
 
 		else:
 			writer = CSV_Writer(log_file_location)
@@ -417,9 +414,9 @@ if __name__ == '__main__':
 	log_file_suffix = ""
 
 	if log_file_suffix == "":
-		log_file_name = "{}_{}".format(str(datetime.date.today()), "logfile.csv")
+		log_file_name = "_{}_{}".format(str(datetime.date.today()), "logfile.csv")
 	else:
-		log_file_name = "{}_{}_{}".format(log_file_suffix, str(datetime.date.today()), "logfile.csv")	
+		log_file_name = "_{}_{}_{}".format(log_file_suffix, str(datetime.date.today()), "logfile.csv")	
 
 	"""To change the hash type, find the create_hash() function and comment in the type you want to use. 
 	default is MD5. Supports md5, sha1, sha224, sha256, sha384, sha512 out the box."""

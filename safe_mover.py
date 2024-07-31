@@ -11,6 +11,9 @@ import time
 import shutil
 import sys
 import csv
+import unicodedata
+
+sys.stdout.reconfigure(encoding='utf-8')
 
 printable = set(string.printable)
 
@@ -21,6 +24,7 @@ class File_Data(object):
 		self.source_f = f
 		self.source_head = folder.mount_point
 		self.destination_head = self.clean_string(folder.destination_folder)
+		# self.destination_head = folder.destination_folder
 		self.destination_f = None
 		self.source_f_path = None 
 		self.source_f_name = None 
@@ -77,8 +81,22 @@ class File_Data(object):
 		return filepath
 
 	def clean_string(self, my_string):
-		"""strips all non UTF-8 chars"""
-		clean_string  = "".join(filter(lambda x: x in printable, my_string))
+		"""
+		Cleans the input string by removing all characters that are not in the allowed set of characters.
+
+		The allowed characters include:
+		- All characters in `string.printable` (which includes digits, letters, punctuation, and whitespace).
+		- All Unicode characters that are categorized as letters (L) or marks (M) according to Unicode standard. 
+			This covers characters like accents or diacritical marks that are part of many Unicode characters.
+
+		Args:
+			my_string (str): The string to be cleaned.
+
+		Returns:
+			str: A new string containing only the allowed characters from the input string.
+		"""
+		allowed_characters = string.printable + ''.join(chr(i) for i in range(0x10000) if unicodedata.category(chr(i)).startswith('M') or unicodedata.category(chr(i)).startswith('L'))
+		clean_string = ''.join(filter(lambda x: x in allowed_characters, my_string))
 		return clean_string
 
 
@@ -247,7 +265,7 @@ def main(mount_point, destination_folder, log_file_location, on_screen_logging, 
 					"new_created_date"
 					]
 	
-	writer = csv.writer(open(log_file_location, "w"), quoting=csv.QUOTE_NONNUMERIC)
+	writer = csv.writer(open(log_file_location, "w", newline='', encoding='utf-8'), quoting=csv.QUOTE_NONNUMERIC)
 
 	writer.writerow(log_line) 
 
@@ -256,7 +274,7 @@ def main(mount_point, destination_folder, log_file_location, on_screen_logging, 
 	for item in folder_data.list_of_files:
 		f = File_Data(item, folder_data, file_tools)
 
-		print (item.encode("utf-8", "replace"))
+		print(item.encode("utf-8", "replace"))
 
 		#print f.destination_f
 		folder_tools.create_folder(os.path.dirname(f.destination_f))
@@ -328,7 +346,7 @@ if __name__ == '__main__':
 	######## editable block ######### 
 
 	"""put your source location / mount point here. This must be the top level of the content you want to move
-	Always start the string with a r... e.g. r"c:\my_locattion\..") """
+	Always start the string with a r... e.g. r"c:\my_location\..") """
 	
 	top_level_folder_of_files = r"E:\safe_mover_test\in"
 
@@ -367,7 +385,7 @@ if __name__ == '__main__':
 	if len(sys.argv) == 4:
 		try:
 			mount_point = sys.argv[1]
-			estination_folder = sys.argv[2]
+			destination_folder = sys.argv[2]
 			log_file_location = sys.argv[3]
 		except:
 			mount_point = top_level_folder_of_files 

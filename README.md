@@ -36,7 +36,7 @@ if no arguments are given, the script will expect the locations in the script bo
 
 ### TODO 
 
-The naming of the logfile is dumb. It needs to be better, to allow them to be written to one location (e.g. ".\my_log_files" - currently they are always called logfile.csv, so if the location of the logfiles is not changed between new mount points the new file data will just get appended to the existing file. This may or may not be desirable, 
+The naming of the logfile needs to be better, to allow them to be written to one location (e.g. ".\my_log_files" - currently they are always called logfile.csv, so if the location of the logfiles is not changed between new mount points the new file data will just get appended to the existing file. This may or may not be desirable.
 
 
 # log_compare.py

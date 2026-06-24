@@ -204,13 +204,19 @@ class Folder_Tools(object):
 		if not os.path.exists(f):
 			os.makedirs(f) 
 
-	def list_folder_contents(self, location):
+	def list_folder_contents(self, location, ignore_dirs):
 		"""returns recursed list of all file objects in location""" 
 
 		print (location)
 
 		list_of_files = []
+
+		if ignore_dirs is None:
+			ignore_dirs = set()
+
 		for root, subs, files in os.walk(location):
+	        # Remove ignored directories *in-place*
+			subs[:] = [d for d in subs if d not in ignore_dirs]
 			for f in files:
 				
 				relative_path = os.path.join(root, f)
@@ -239,7 +245,10 @@ def main(mount_point, destination_folder, log_file_location, on_screen_logging, 
 
 
 	folder_data = Folder_Data(mount_point, destination_folder)
-	folder_data.list_of_files = folder_tools.list_folder_contents(folder_data.mount_point)
+	folder_data.list_of_files = folder_tools.list_folder_contents(
+		folder_data.mount_point,
+		ignore_dirs=IGNORE_DIRS
+	)
 
 	folder_tools.create_folder(folder_data.destination_folder)
 
@@ -345,24 +354,25 @@ if __name__ == '__main__':
 	
 	######## editable block ######### 
 
+	"""We can ignore directories here to prevent them being walked
+	e.g. IGNORE_DIRS = {"tmp", "cache", ".git", "__pycache__"}"""
+	IGNORE_DIRS = {"tmp", "cache", ".git", "__pycache__"}
+
 	"""put your source location / mount point here. This must be the top level of the content you want to move
-	Always start the string with a r... e.g. r"c:\my_location\..") """
-	
-	top_level_folder_of_files = r"E:\safe_mover_test\in"
+	Always start the string with a r... e.g. r"C:\\safe_mover_test\\in") """
+	top_level_folder_of_files =  r"C:\safe_mover_test\in"
 
 	"""put the location you expect the files to be copied to here - network locations are supported
-	if they are in full (e.g. r"\\pawai\..") """ 
-
-	where_the_files_will_go = r"E:\safe_mover_test\out"
+	if they are in full (e.g. r"C:\\safe_mover_test\\out") """ 
+	where_the_files_will_go = r"C:\safe_mover_test\out"
 
 	"""the log file defaults to the folder that houses the python script
-	if you want a specific location, you can add is here (or to to the command line call) """
-	
-	where_the_log_file_will_go = where_the_files_will_go
+	if you want a specific location, you can add is here (or to to the command line call)
+	e.g. where_the_log_file_will_go = r"C:\\safe_mover_test" """
+	where_the_log_file_will_go = where_the_log_file_will_go
 	
 	"""This variable is set True if you want on screen logging of interventions, or False if not. 
 	Its worth noting that the log will hold a record of the intervention regardless"""
-	
 	on_screen_logging = True
 
 	"""This variable lets you change the name of the log file

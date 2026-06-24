@@ -356,7 +356,7 @@ if __name__ == '__main__':
 
 	"""We can ignore directories here to prevent them being walked
 	e.g. IGNORE_DIRS = {"tmp", "cache", ".git", "__pycache__"}"""
-	IGNORE_DIRS = {"tmp", "cache", ".git", "__pycache__"}
+	IGNORE_DIRS = None
 
 	"""put your source location / mount point here. This must be the top level of the content you want to move
 	Always start the string with a r... e.g. r"C:\\safe_mover_test\\in") """

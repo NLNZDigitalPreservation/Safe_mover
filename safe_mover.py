@@ -366,10 +366,10 @@ if __name__ == '__main__':
 	if they are in full (e.g. r"C:\\safe_mover_test\\out") """ 
 	where_the_files_will_go = r"C:\safe_mover_test\out"
 
-	"""the log file defaults to the folder that houses the python script
+	"""the log file defaults to the destination folder
 	if you want a specific location, you can add is here (or to to the command line call)
 	e.g. where_the_log_file_will_go = r"C:\\safe_mover_test" """
-	where_the_log_file_will_go = where_the_log_file_will_go
+	where_the_log_file_will_go = where_the_files_will_go
 	
 	"""This variable is set True if you want on screen logging of interventions, or False if not. 
 	Its worth noting that the log will hold a record of the intervention regardless"""

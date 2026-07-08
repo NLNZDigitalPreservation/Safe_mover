@@ -97,6 +97,8 @@ class File_Data(object):
 		"""
 		allowed_characters = string.printable + ''.join(chr(i) for i in range(0x10000) if unicodedata.category(chr(i)).startswith('M') or unicodedata.category(chr(i)).startswith('L'))
 		clean_string = ''.join(filter(lambda x: x in allowed_characters, my_string))
+		"""Use this instead to strip all non UTF-8 chars. Note this is VERY restrictive.
+		clean_string  = "".join(filter(lambda x: x in printable, my_string))"""
 		return clean_string
 
 
